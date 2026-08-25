@@ -1099,6 +1099,9 @@ input::placeholder {
 .section-head.tight {
   margin-top: 0;
 }
+.page-tools {
+  justify-content: flex-end;
+}
 .customer-access-card {
   display: grid;
   gap: 16px;
