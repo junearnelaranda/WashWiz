@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WashWiz Booking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite" aria-label="Washing loading screen">
+      <div class="loader-machine" aria-hidden="true">
+        <div class="loader-panel">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="loader-door">
+          <div class="loader-glass">
+            <div class="loader-spin">
+              <span class="loader-water"></span>
+              <span class="loader-foam foam-one"></span>
+              <span class="loader-foam foam-two"></span>
+              <span class="loader-foam foam-three"></span>
+              <span class="loader-bubble bubble-one"></span>
+              <span class="loader-bubble bubble-two"></span>
+              <span class="loader-bubble bubble-three"></span>
+              <span class="loader-bubble bubble-four"></span>
+              <span class="cloth cloth-one"></span>
+              <span class="cloth cloth-two"></span>
+              <span class="cloth cloth-three"></span>
+              <span class="cloth cloth-four"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="loading-text" aria-label="Loading"><span>.</span><span>.</span><span>.</span></p>
+    </div>
+
+    <div id="auth" class="auth-screen">
+      <section class="brand-panel">
+        <div class="washer-hero brand-logo-hero" aria-hidden="true">
+          <img src="tempLogo.png" alt="">
+        </div>
+        <p class="eyebrow">Laundry operations</p>
+        <h1>WashWiz</h1>
+        <p>Book machines, sell wash supplies, and track daily shop performance from one organized operations workspace.</p>
+      </section>
+
+      <section class="auth-card clay">
+        <div class="tabs" role="tablist" aria-label="Authentication">
+          <button class="tab active" data-auth-tab="login">Login</button>
+          <button class="tab" data-auth-tab="register">Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <label>Email<input type="email" value="manager@washwiz.test" required></label>
+          <label>Password<input type="password" value="washwiz" required></label>
+          <button class="primary-btn" type="submit">Enter Dashboard</button>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden">
+          <label>Facility name<input type="text" value="Bluewater Laundry" required></label>
+          <label>Owner email<input type="email" value="owner@bluewater.test" required></label>
+          <label>Password<input type="password" value="washwiz" required></label>
+          <button class="primary-btn" type="submit">Create Facility</button>
+        </form>
+
+        <button class="secondary-btn portal-link" type="button" id="openVerification">Customer Order Verification</button>
+      </section>
+    </div>
+
+    <div id="customerPortal" class="customer-portal hidden">
+      <button class="secondary-btn compact portal-back" type="button" id="backToAuth">Back to Staff Login</button>
+
+      <section id="verificationPage" class="verification-page active-customer-view">
+        <div class="verification-card clay">
+          <p class="eyebrow">Customer portal</p>
+          <h2>Verify Your Order</h2>
+          <p class="portal-intro">Scan your order QR code or enter the details from your receipt.</p>
+
+          <button class="qr-scan-box" type="button">
+            <span class="qr-grid" aria-hidden="true"></span>
+            <strong>Scan QR Code</strong>
+          </button>
+
+          <div class="or-divider"><span>OR</span></div>
+
+          <form id="verificationForm" class="verification-form">
+            <label>Order ID<input id="verifyOrderId" type="text" value="LW7K4M9Q2X8R6P3" autocomplete="off"></label>
+            <label>Full Name<input id="verifyFullName" type="text" placeholder="Enter your full name" autocomplete="name"></label>
+            <p id="verificationMessage" class="verification-message" aria-live="polite"></p>
+            <button class="primary-btn" id="verifyButton" type="submit">VERIFY</button>
+          </form>
+
+          <div class="flow-preview" aria-label="Verification flow">
+            <span>Scan QR Code</span>
+            <span>OR</span>
+            <span>Enter Order ID</span>
+            <span>Enter Full Name</span>
+            <span>VERIFY</span>
+            <strong>Access Granted</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="customerOrderPage" class="customer-order-page">
+        <header class="customer-order-header clay">
+          <div>
+            <p class="eyebrow">My Order</p>
+            <h2>My Order</h2>
+            <p><span class="status-pill success">&#10003; Verified Order</span></p>
+          </div>
+          <div class="order-id-panel">
+            <span>Order ID</span>
+            <strong>LW7K4M9Q2X8R6P3</strong>
+          </div>
+        </header>
+
+        <nav class="customer-tabs" aria-label="Customer order sections">
+          <button class="active" data-customer-tab="overview">Overview</button>
+          <button data-customer-tab="tracking">Tracking</button>
+          <button data-customer-tab="payment">Payment</button>
+          <button data-customer-tab="chat">Chat</button>
+        </nav>
+
+        <div id="customerOverview" class="customer-tab-panel active-customer-tab">
+          <article class="order-card clay">
+            <div class="section-head tight"><h3>Order Details</h3><span class="status-pill warning">Processing</span></div>
+            <div class="detail-grid" id="orderDetailsGrid"></div>
+          </article>
+        </div>
+
+        <div id="customerTracking" class="customer-tab-panel">
+          <article class="order-card clay">
+            <h3>Order Tracking</h3>
+            <div class="tracking-timeline" id="trackingTimeline"></div>
+            <div class="status-summary">
+              <div><span>Current Status</span><strong>Your order is currently being processed.</strong></div>
+              <div><span>Last Updated</span><strong>August 25, 2026 - 8:30 PM</strong></div>
+            </div>
+            <p class="empty-state compact-empty hidden" id="trackingEmpty">No tracking information yet.</p>
+          </article>
+        </div>
+
+        <div id="customerPayment" class="customer-tab-panel">
+          <article class="order-card clay">
+            <h3>Payment Details</h3>
+            <div class="payment-summary" id="paymentSummary"></div>
+            <div class="payment-progress"><span></span></div>
+            <p class="payment-caption">PHP 2,000 / PHP 3,500 paid</p>
+            <div class="section-head transactions-head"><h3>Payment History</h3></div>
+            <div id="paymentHistory" class="payment-history"></div>
+            <p class="empty-state compact-empty hidden" id="paymentEmpty">No payment history yet.</p>
+          </article>
+        </div>
+
+        <div id="customerChat" class="customer-tab-panel">
+          <article class="order-card clay chat-card">
+            <div>
+              <h3>Order Support</h3>
+              <p>Regarding Order LW7K4M9Q2X8R6P3</p>
+            </div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <p class="empty-state compact-empty hidden" id="chatEmpty">No chat messages yet.</p>
+            <form id="chatForm" class="chat-composer">
+              <input id="chatInput" type="text" placeholder="Type a message...">
+              <button class="primary-btn" type="submit">Send</button>
+            </form>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <div id="app" class="app-shell hidden">
+      <aside class="sidebar clay">
+        <div class="logo-mark logo-image"><img src="tempLogo.png" alt="WashWiz logo"></div>
+        <div>
+          <strong>WashWiz</strong>
+          <small>Bluewater Laundry</small>
+        </div>
+          <button class="primary-btn nav-book" data-route="machines"><span aria-hidden="true">+</span> New Booking</button>
+          <nav>
+          <button class="nav-link active" data-route="dashboard" aria-current="page">Dashboard</button>
+          <button class="nav-link" data-route="bookings">Bookings</button>
+          <button class="nav-link" data-route="customers">Customers</button>
+          <button class="nav-link" data-route="revenue">Revenue</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <button class="icon-btn mobile-menu" id="menuToggle" aria-label="Toggle menu"><span aria-hidden="true">=</span></button>
+          <div>
+            <p class="eyebrow" id="routeEyebrow">Today</p>
+            <h2 id="routeTitle">WashWiz Dashboard</h2>
+          </div>
+          <div class="top-actions">
+            <button class="icon-btn" aria-label="Search"><span aria-hidden="true">S</span></button>
+            <button class="icon-btn" aria-label="Notifications"><span aria-hidden="true">!</span></button>
+            <button class="avatar" aria-label="Operator profile">AM</button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="view active-view">
+          <div class="metrics-grid" id="metrics"></div>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Live floor</p>
+              <h3>Machine Status</h3>
+            </div>
+            <div class="segmented" id="machineFilter">
+              <button class="active" data-filter="all">All</button>
+              <button data-filter="washer">Washers</button>
+              <button data-filter="dryer">Dryers</button>
+            </div>
+          </div>
+          <div class="machine-grid" id="dashboardMachines"></div>
+        </section>
+
+        <section id="machines" class="view">
+          <div class="booking-layout">
+            <div>
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Step 1</p>
+                  <h3>Select Machine</h3>
+                </div>
+                <div class="segmented" id="bookingMachineFilter">
+                  <button class="active" data-filter="all">All</button>
+                  <button data-filter="small">Small</button>
+                  <button data-filter="large">Large</button>
+                  <button data-filter="xl">XLarge</button>
+                </div>
+              </div>
+              <div class="machine-grid" id="bookingMachines"></div>
+            </div>
+            <aside class="summary clay">
+              <p class="eyebrow">Current booking</p>
+              <h3 id="selectedMachineTitle">Choose a machine</h3>
+              <p id="selectedMachineMeta">Available washers and dryers are ready to book.</p>
+              <label>Customer name<input id="customerName" type="text" placeholder="Walk-in Customer"></label>
+              <label>Contact<input id="customerContact" type="text" placeholder="0917 555 0123"></label>
+              <button class="primary-btn" id="continueSupplies" disabled>Continue</button>
+            </aside>
+          </div>
+        </section>
+
+        <section id="supplies" class="view">
+          <div class="booking-layout">
+            <div>
+              <p class="eyebrow">Step 2</p>
+              <h3>Enhance Your Wash</h3>
+              <div class="supplies-list" id="suppliesList"></div>
+            </div>
+            <aside class="summary clay">
+              <p class="eyebrow">Order summary</p>
+              <div id="orderSummary"></div>
+              <button class="primary-btn" id="confirmBooking">Confirm & Pay</button>
+            </aside>
+          </div>
+        </section>
+
+        <section id="confirmed" class="view">
+          <div class="confirm-card clay">
+            <div class="success-orb">OK</div>
+            <p class="eyebrow">Booking confirmed</p>
+            <h3 id="confirmTitle">Machine booked</h3>
+            <p id="confirmDetails"></p>
+            <div class="confirm-actions">
+              <button class="primary-btn" data-route="machines">New Booking</button>
+              <button class="secondary-btn" data-route="dashboard">Back to Dashboard</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="bookings" class="view">
+          <div class="table-card clay">
+            <table>
+              <thead><tr><th>Customer</th><th>Machine</th><th>Status</th><th>Time</th><th>Total</th></tr></thead>
+              <tbody id="bookingsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="customers" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Relationships</p>
+              <h3>Customers</h3>
+            </div>
+            <input id="customerSearch" class="search-input" type="search" placeholder="Search customers">
+          </div>
+          <div class="table-card clay">
+            <table>
+              <thead><tr><th>Customer Name</th><th>Contact</th><th>Total Bookings</th><th>Last Visit</th><th>Spend</th><th>Action</th></tr></thead>
+              <tbody id="customersTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="revenue" class="view">
+          <div class="section-head revenue-toolbar">
+            <div>
+              <p class="eyebrow">Revenue & Analytics</p>
+              <h3>Overview of shop performance and machine utilization.</h3>
+            </div>
+            <div class="revenue-actions">
+              <button class="secondary-btn compact" type="button">Export</button>
+              <button class="secondary-btn compact" type="button">Last 30 Days</button>
+            </div>
+          </div>
+          <div class="metrics-grid" id="revenueMetrics"></div>
+          <div class="analytics-grid">
+            <div class="chart-card clay">
+              <div class="section-head tight">
+                <h3>Weekly Revenue</h3>
+                <button class="icon-btn mini" type="button" aria-label="Weekly revenue options">...</button>
+              </div>
+              <div class="bar-chart" id="barChart"></div>
+            </div>
+            <div class="chart-card clay">
+              <div class="section-head tight">
+                <h3>Usage by Type</h3>
+                <button class="icon-btn mini" type="button" aria-label="Usage options">...</button>
+              </div>
+              <div class="usage-list" id="usageList"></div>
+            </div>
+          </div>
+          <div class="section-head transactions-head">
+            <div>
+              <p class="eyebrow">Ledger</p>
+              <h3>Recent Transactions</h3>
+            </div>
+            <button class="secondary-btn compact" type="button">View All</button>
+          </div>
+          <div class="table-card clay">
+            <table>
+              <thead><tr><th>Date & Time</th><th>Customer / Machine</th><th>Payment Method</th><th>Amount</th></tr></thead>
+              <tbody id="transactionsTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="customerAccessModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="customerAccessTitle">
+      <div class="modal-backdrop" data-close-modal></div>
+      <article class="customer-access-card modal-card clay">
+        <button class="icon-btn modal-close" type="button" data-close-modal aria-label="Close customer access details">x</button>
+        <div>
+          <p class="eyebrow">Customer Access</p>
+          <h3 id="customerAccessTitle">Share Order Verification</h3>
+          <p class="modal-subtitle" id="customerAccessCustomer">Customer order portal access</p>
+        </div>
+        <div class="admin-access-body">
+          <div class="admin-order-id">
+            <span>Order ID</span>
+            <strong>LW7K4M9Q2X8R6P3</strong>
+          </div>
+          <div class="qr-placeholder" aria-label="QR code placeholder">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>Scan to view customer order</p>
+        </div>
+        <div class="access-actions">
+          <button class="secondary-btn compact" type="button" data-copy="LW7K4M9Q2X8R6P3">Copy Order ID</button>
+          <button class="secondary-btn compact" type="button" data-copy="https://example.com/verify/LW7K4M9Q2X8R6P3">Copy Link</button>
+          <button class="primary-btn compact" type="button" data-print-qr>Print QR</button>
+        </div>
+        <p class="access-message" aria-live="polite"></p>
+      </article>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
