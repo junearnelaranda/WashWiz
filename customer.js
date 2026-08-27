@@ -59,8 +59,11 @@ customerById("customerVerificationForm").addEventListener("submit", event => {
       setMessage(
         "customerVerificationMessage",
         "success",
-        `Order verified. Status: ${mockCustomerOrder.status}. Expected completion: ${mockCustomerOrder.expectedCompletion}.`
+        "Order verified. Opening your session..."
       );
+      window.setTimeout(() => {
+        window.location.href = `session.html?orderId=${encodeURIComponent(orderId)}`;
+      }, 450);
       return;
     }
 

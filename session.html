@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WashWiz Order Session</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="customer-portal">
+      <a class="secondary-btn compact portal-back" href="customer.html">Back to Customer Page</a>
+
+      <section id="customerOrderPage" class="customer-order-page active-customer-view">
+        <header class="customer-order-header clay">
+          <div>
+            <p class="eyebrow">Order Session</p>
+            <h2>My Order</h2>
+            <p><span class="status-pill success">Verified Order</span></p>
+          </div>
+          <div class="order-id-panel">
+            <span>Order ID</span>
+            <strong id="sessionOrderId">LW7K4M9Q2X8R6P3</strong>
+          </div>
+        </header>
+
+        <nav class="customer-tabs" aria-label="Customer order sections">
+          <button class="active" type="button" data-customer-tab="overview">Overview</button>
+          <button type="button" data-customer-tab="tracking">Tracking</button>
+          <button type="button" data-customer-tab="payment">Payment</button>
+          <button type="button" data-customer-tab="chat">Chat</button>
+        </nav>
+
+        <div id="customerOverview" class="customer-tab-panel active-customer-tab">
+          <article class="order-card clay">
+            <div class="section-head tight"><h3>Order Details</h3><span class="status-pill warning">Processing</span></div>
+            <div class="detail-grid" id="orderDetailsGrid"></div>
+          </article>
+        </div>
+
+        <div id="customerTracking" class="customer-tab-panel">
+          <article class="order-card clay">
+            <h3>Order Tracking</h3>
+            <div class="tracking-timeline" id="trackingTimeline"></div>
+            <div class="status-summary">
+              <div><span>Current Status</span><strong>Your order is currently being processed.</strong></div>
+              <div><span>Last Updated</span><strong>August 25, 2026 - 8:30 PM</strong></div>
+            </div>
+            <p class="empty-state compact-empty hidden" id="trackingEmpty">No tracking information yet.</p>
+          </article>
+        </div>
+
+        <div id="customerPayment" class="customer-tab-panel">
+          <article class="order-card clay">
+            <h3>Payment Details</h3>
+            <div class="payment-summary" id="paymentSummary"></div>
+            <div class="payment-progress"><span></span></div>
+            <p class="payment-caption">PHP 2,000 / PHP 3,500 paid</p>
+            <div class="section-head transactions-head"><h3>Payment History</h3></div>
+            <div id="paymentHistory" class="payment-history"></div>
+            <p class="empty-state compact-empty hidden" id="paymentEmpty">No payment history yet.</p>
+          </article>
+        </div>
+
+        <div id="customerChat" class="customer-tab-panel">
+          <article class="order-card clay chat-card">
+            <div>
+              <h3>Order Support</h3>
+              <p id="chatOrderLabel">Regarding Order LW7K4M9Q2X8R6P3</p>
+            </div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <p class="empty-state compact-empty hidden" id="chatEmpty">No chat messages yet.</p>
+            <form id="chatForm" class="chat-composer">
+              <input id="chatInput" type="text" placeholder="Type a message...">
+              <button class="primary-btn" type="submit">Send</button>
+            </form>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="session.js"></script>
+  </body>
+</html>
