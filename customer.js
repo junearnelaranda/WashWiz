@@ -6,11 +6,27 @@ const mockCustomerOrder = {
 
 const customerById = id => document.getElementById(id);
 
+function setCustomerSection(sectionId) {
+  document.querySelectorAll("[data-customer-section]").forEach(button => {
+    const active = button.dataset.customerSection === sectionId;
+    button.classList.toggle("active", active);
+    button.classList.toggle("primary-btn", active);
+    button.classList.toggle("secondary-btn", !active);
+  });
+  document.querySelectorAll(".customer-section").forEach(section => {
+    section.classList.toggle("active-customer-section", section.id === sectionId);
+  });
+}
+
 function setMessage(id, type, text) {
   const message = customerById(id);
   message.className = `verification-message ${type}`;
   message.textContent = text;
 }
+
+document.querySelectorAll("[data-customer-section]").forEach(button => {
+  button.addEventListener("click", () => setCustomerSection(button.dataset.customerSection));
+});
 
 customerById("customerBookingForm").addEventListener("submit", event => {
   event.preventDefault();

@@ -15,16 +15,14 @@
         <a class="secondary-btn compact customer-home-link" href="index.html">Staff Login</a>
         <img class="customer-page-logo" src="tempLogo.png" alt="WashWiz wizard washing machine logo">
         <p class="eyebrow">Customer page</p>
-        <h1>WashWiz.</h1>
-        <p>Book your laundry service or verify an existing order from one simple page.</p>
         <div class="customer-action-row">
-          <a class="primary-btn" href="#bookService">Book Now</a>
-          <a class="secondary-btn" href="#verifyOrder">Verify Order</a>
+          <button class="primary-btn active" type="button" data-customer-section="bookService">Book Now</button>
+          <button class="secondary-btn" type="button" data-customer-section="verifyOrder">Verify Order</button>
         </div>
       </section>
 
-      <section class="customer-page-grid" aria-label="Customer tools">
-        <article id="bookService" class="customer-tool-card clay">
+      <section class="customer-section-stage" aria-label="Customer tools">
+        <article id="bookService" class="customer-tool-card customer-section active-customer-section clay">
           <p class="eyebrow">New booking</p>
           <h2>Book Laundry Service</h2>
           <p class="portal-intro">Send your booking request and we will prepare a washer, dryer, and supplies for your visit.</p>
@@ -39,7 +37,7 @@
           </form>
         </article>
 
-        <article id="verifyOrder" class="customer-tool-card clay">
+        <article id="verifyOrder" class="customer-tool-card customer-section clay">
           <p class="eyebrow">Customer verification</p>
           <h2>Verify Your Order</h2>
           <p class="portal-intro">Enter the details from your receipt to check your order status.</p>
@@ -59,6 +57,8 @@
           </form>
         </article>
       </section>
+
+      <footer class="customer-footer">@WashWiz.</footer>
     </main>
 
     <script src="customer.js"></script>
