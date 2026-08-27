@@ -74,6 +74,7 @@ function showLoadingBefore(callback, delay = 1100) {
     return;
   }
   loadingScreen.classList.remove("is-title");
+  loadingScreen.classList.remove("is-black");
   loadingScreen.classList.remove("is-brand");
   loadingScreen.classList.add("is-washer");
   loadingScreen.classList.remove("is-done");
@@ -502,6 +503,6 @@ window.setTimeout(() => {
   const loadingScreen = byId("loadingScreen");
   if (!loadingScreen) return;
   loadingScreen.classList.remove("is-title");
-  loadingScreen.classList.add("is-brand");
-}, 1500);
-window.setTimeout(finishLoading, 3400);
+  loadingScreen.classList.add("is-black");
+}, 1300);
+window.setTimeout(finishLoading, 3200);
