@@ -10,8 +10,16 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite" aria-label="Washing loading screen">
-      <div class="loader-machine" aria-hidden="true">
+    <div id="loadingScreen" class="loading-screen is-title" role="status" aria-live="polite" aria-label="Loading screen">
+      <div class="loading-title-card">
+        <img class="intro-title-image" src="intro.png" alt="The Lord Of The Rinse. A Smart Laundry System.">
+      </div>
+      <img class="splash-logo" src="tempLogo.png" alt="WashWiz wizard washing machine logo">
+      <div class="splash-brand">
+        <strong>WashWiz.</strong>
+        <span>Smart laundry operations for bookings, supplies, and shop performance.</span>
+      </div>
+      <div class="loader-machine loading-washer" aria-hidden="true">
         <div class="loader-panel">
           <span></span>
           <span></span>
@@ -36,19 +44,9 @@
           </div>
         </div>
       </div>
-      <p class="loading-text" aria-label="Loading"><span>.</span><span>.</span><span>.</span></p>
     </div>
 
     <div id="auth" class="auth-screen">
-      <section class="brand-panel">
-        <div class="washer-hero brand-logo-hero" aria-hidden="true">
-          <img src="tempLogo.png" alt="">
-        </div>
-        <p class="eyebrow">Laundry operations</p>
-        <h1>WashWiz</h1>
-        <p>Book machines, sell wash supplies, and track daily shop performance from one organized operations workspace.</p>
-      </section>
-
       <section class="auth-card clay">
         <div class="tabs" role="tablist" aria-label="Authentication">
           <button class="tab active" data-auth-tab="login">Login</button>
@@ -68,7 +66,7 @@
           <button class="primary-btn" type="submit">Create Facility</button>
         </form>
 
-        <button class="secondary-btn portal-link" type="button" id="openVerification">Customer Order Verification</button>
+        <a class="secondary-btn portal-link" href="customer.html">Customer Page</a>
       </section>
     </div>
 

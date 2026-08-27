@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WashWiz Customer Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="customer-page-shell">
+      <section class="customer-hero">
+        <a class="secondary-btn compact customer-home-link" href="index.html">Staff Login</a>
+        <img class="customer-page-logo" src="tempLogo.png" alt="WashWiz wizard washing machine logo">
+        <p class="eyebrow">Customer page</p>
+        <h1>WashWiz.</h1>
+        <p>Book your laundry service or verify an existing order from one simple page.</p>
+        <div class="customer-action-row">
+          <a class="primary-btn" href="#bookService">Book Now</a>
+          <a class="secondary-btn" href="#verifyOrder">Verify Order</a>
+        </div>
+      </section>
+
+      <section class="customer-page-grid" aria-label="Customer tools">
+        <article id="bookService" class="customer-tool-card clay">
+          <p class="eyebrow">New booking</p>
+          <h2>Book Laundry Service</h2>
+          <p class="portal-intro">Send your booking request and we will prepare a washer, dryer, and supplies for your visit.</p>
+
+          <form id="customerBookingForm" class="customer-page-form">
+            <label>Full Name<input id="bookingName" type="text" placeholder="Enter your full name" autocomplete="name" required></label>
+            <label>Contact Number<input id="bookingContact" type="tel" placeholder="0917 555 0123" autocomplete="tel" required></label>
+            <label>Preferred Service<input id="bookingService" type="text" placeholder="Wash, dry, fold, or supplies" required></label>
+            <label>Preferred Time<input id="bookingTime" type="text" placeholder="Today, 3:00 PM" required></label>
+            <p id="bookingMessage" class="verification-message" aria-live="polite"></p>
+            <button class="primary-btn" type="submit">Book Service</button>
+          </form>
+        </article>
+
+        <article id="verifyOrder" class="customer-tool-card clay">
+          <p class="eyebrow">Customer verification</p>
+          <h2>Verify Your Order</h2>
+          <p class="portal-intro">Enter the details from your receipt to check your order status.</p>
+
+          <button class="qr-scan-box compact-scan" type="button">
+            <span class="qr-grid" aria-hidden="true"></span>
+            <strong>Scan QR Code</strong>
+          </button>
+
+          <div class="or-divider"><span>OR</span></div>
+
+          <form id="customerVerificationForm" class="verification-form">
+            <label>Order ID<input id="customerOrderId" type="text" value="LW7K4M9Q2X8R6P3" autocomplete="off" required></label>
+            <label>Full Name<input id="customerFullName" type="text" placeholder="Enter your full name" autocomplete="name" required></label>
+            <p id="customerVerificationMessage" class="verification-message" aria-live="polite"></p>
+            <button class="primary-btn" id="customerVerifyButton" type="submit">Verify Order</button>
+          </form>
+        </article>
+      </section>
+    </main>
+
+    <script src="customer.js"></script>
+  </body>
+</html>

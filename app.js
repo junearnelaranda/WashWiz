@@ -73,6 +73,9 @@ function showLoadingBefore(callback, delay = 1100) {
     callback();
     return;
   }
+  loadingScreen.classList.remove("is-title");
+  loadingScreen.classList.remove("is-brand");
+  loadingScreen.classList.add("is-washer");
   loadingScreen.classList.remove("is-done");
   window.setTimeout(() => {
     callback();
@@ -448,7 +451,7 @@ byId("continueSupplies").addEventListener("click", () => { renderSupplies(); set
 byId("confirmBooking").addEventListener("click", confirmBooking);
 byId("customerSearch").addEventListener("input", renderCustomers);
 byId("menuToggle").addEventListener("click", () => document.querySelector(".sidebar").classList.toggle("open"));
-byId("openVerification").addEventListener("click", () => showCustomerPortal("verify"));
+byId("openVerification")?.addEventListener("click", () => showCustomerPortal("verify"));
 byId("backToAuth").addEventListener("click", showAuthScreen);
 byId("verificationForm").addEventListener("submit", event => {
   event.preventDefault();
@@ -495,4 +498,10 @@ document.addEventListener("keydown", event => {
 
 renderAll();
 renderCustomerPortal();
-window.setTimeout(finishLoading, 1800);
+window.setTimeout(() => {
+  const loadingScreen = byId("loadingScreen");
+  if (!loadingScreen) return;
+  loadingScreen.classList.remove("is-title");
+  loadingScreen.classList.add("is-brand");
+}, 1500);
+window.setTimeout(finishLoading, 3400);
