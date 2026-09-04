@@ -1,16 +1,9 @@
 const state = {
-  route: "dashboard",
-  customerTab: "overview",
+  route: document.body.dataset.page || "dashboard",
   selectedMachine: null,
   supplies: {},
-  verificationState: "default",
   activeSupportThread: "juan-order",
   supportFilter: "all",
-  chatMessages: [
-    { sender: "Admin", body: "Hello Juan! Your order is now being processed." },
-    { sender: "Customer", body: "Thank you. When will it be ready?" },
-    { sender: "Admin", body: "Expected completion is August 30." }
-  ],
   bookings: [
     { customer: "Maya Santos", contact: "0917 202 0144", machine: "W-02", type: "Washer", status: "In Cycle", time: "10:20 AM", total: 295 },
     { customer: "Walk-in Customer", contact: "Cash desk", machine: "D-02", type: "Dryer", status: "Drying", time: "10:42 AM", total: 165 },
@@ -34,29 +27,6 @@ const supplies = [
   { id: "bleach", name: "Color-Safe Bleach", desc: "Brightens without harsh fading", price: 40 },
   { id: "sheets", name: "Anti-Static Dryer Sheets", desc: "Reduces cling for dry cycles", price: 25 }
 ];
-
-const mockOrder = {
-  id: "LW7K4M9Q2X8R6P3",
-  customer: "Juan Dela Cruz",
-  date: "August 25, 2026",
-  service: "Custom Printing Service",
-  quantity: "10",
-  total: "PHP 3,500.00",
-  expectedCompletion: "August 30, 2026",
-  status: "Processing",
-  amountPaid: 2000,
-  totalAmount: 3500,
-  paymentHistory: [
-    { date: "August 20, 2026", method: "GCash", amount: "PHP 2,000.00", status: "Paid" }
-  ],
-  tracking: [
-    { label: "Order Received", state: "complete" },
-    { label: "Confirmed", state: "complete" },
-    { label: "Processing", state: "current" },
-    { label: "Ready", state: "upcoming" },
-    { label: "Completed", state: "upcoming" }
-  ]
-};
 
 const supportThreads = [
   {
@@ -167,86 +137,14 @@ function showLoadingBefore(callback, delay = 1100) {
   }, delay);
 }
 
-function showCustomerPortal(view = "verify") {
-  byId("auth").classList.add("hidden");
-  byId("app").classList.add("hidden");
-  byId("customerPortal").classList.remove("hidden");
-  byId("verificationPage").classList.toggle("active-customer-view", view === "verify");
-  byId("customerOrderPage").classList.toggle("active-customer-view", view === "order");
-}
-
-function showAuthScreen() {
-  byId("customerPortal").classList.add("hidden");
-  byId("app").classList.add("hidden");
-  byId("auth").classList.remove("hidden");
-}
-
 function logOutStaff() {
+  sessionStorage.removeItem("washwizStaffLoggedIn");
   showLoadingBefore(() => {
     byId("app").classList.add("hidden");
-    byId("customerPortal").classList.add("hidden");
     byId("auth").classList.remove("hidden");
     document.querySelector(".sidebar").classList.remove("open");
     setRoute("dashboard");
   }, 650);
-}
-
-function renderCustomerPortal() {
-  byId("orderDetailsGrid").innerHTML = [
-    ["Order ID", mockOrder.id],
-    ["Customer", mockOrder.customer],
-    ["Order Date", mockOrder.date],
-    ["Service", mockOrder.service],
-    ["Quantity", mockOrder.quantity],
-    ["Total", mockOrder.total],
-    ["Expected Completion", mockOrder.expectedCompletion]
-  ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
-
-  byId("trackingTimeline").innerHTML = mockOrder.tracking.map(step => `
-    <div class="tracking-step ${step.state}">
-      <span>${step.state === "complete" ? "OK" : step.state === "current" ? "" : ""}</span>
-      <strong>${step.label}</strong>
-    </div>
-  `).join("");
-  byId("trackingEmpty").classList.toggle("hidden", mockOrder.tracking.length > 0);
-
-  byId("paymentSummary").innerHTML = [
-    ["Total Amount", "PHP 3,500.00"],
-    ["Amount Paid", "PHP 2,000.00"],
-    ["Remaining Balance", "PHP 1,500.00"],
-    ["Payment Status", `<span class="status-pill warning">Partially Paid</span>`]
-  ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
-  byId("paymentHistory").innerHTML = mockOrder.paymentHistory.map(payment => `
-    <div class="payment-row">
-      <div><strong>${payment.date}</strong><span>${payment.method}</span></div>
-      <div><strong>${payment.amount}</strong><span class="status-pill success">${payment.status}</span></div>
-    </div>
-  `).join("");
-  byId("paymentEmpty").classList.toggle("hidden", mockOrder.paymentHistory.length > 0);
-
-  renderChatMessages();
-}
-
-function renderChatMessages() {
-  byId("chatMessages").innerHTML = state.chatMessages.map(message => `
-    <div class="chat-message ${message.sender === "Customer" ? "customer" : "admin"}">
-      <span>${message.sender}</span>
-      <p>${message.body}</p>
-    </div>
-  `).join("");
-  byId("chatEmpty").classList.toggle("hidden", state.chatMessages.length > 0);
-}
-
-function setCustomerTab(tab) {
-  state.customerTab = tab;
-  document.querySelectorAll("[data-customer-tab]").forEach(button => button.classList.toggle("active", button.dataset.customerTab === tab));
-  document.querySelectorAll(".customer-tab-panel").forEach(panel => panel.classList.toggle("active-customer-tab", panel.id === `customer${tab[0].toUpperCase()}${tab.slice(1)}`));
-}
-
-function setVerificationMessage(type, text) {
-  const message = byId("verificationMessage");
-  message.className = `verification-message ${type}`;
-  message.textContent = text;
 }
 
 function showAccessMessage(source, text) {
@@ -390,7 +288,7 @@ function setRoute(route) {
   state.route = route;
   document.querySelectorAll(".view").forEach(view => view.classList.toggle("active-view", view.id === route));
   document.querySelectorAll(".nav-link").forEach(link => {
-    const active = link.dataset.route === route;
+    const active = link.dataset.pageLink === route;
     link.classList.toggle("active", active);
     link.toggleAttribute("aria-current", active);
   });
@@ -657,6 +555,8 @@ document.addEventListener("click", event => {
 byId("loginForm").addEventListener("submit", event => {
   event.preventDefault();
   showLoadingBefore(() => {
+    sessionStorage.setItem("washwizStaffLoggedIn", "true");
+    setRoute(document.body.dataset.page || "dashboard");
     byId("auth").classList.add("hidden");
     byId("app").classList.remove("hidden");
   });
@@ -664,6 +564,8 @@ byId("loginForm").addEventListener("submit", event => {
 byId("registerForm").addEventListener("submit", event => {
   event.preventDefault();
   showLoadingBefore(() => {
+    sessionStorage.setItem("washwizStaffLoggedIn", "true");
+    setRoute(document.body.dataset.page || "dashboard");
     byId("auth").classList.add("hidden");
     byId("app").classList.remove("hidden");
   });
@@ -674,47 +576,6 @@ byId("customerSearch").addEventListener("input", renderCustomers);
 byId("supportSearch").addEventListener("input", renderSupportInbox);
 byId("menuToggle").addEventListener("click", () => document.querySelector(".sidebar").classList.toggle("open"));
 byId("logoutButton").addEventListener("click", logOutStaff);
-byId("openVerification")?.addEventListener("click", () => showCustomerPortal("verify"));
-byId("backToAuth").addEventListener("click", showAuthScreen);
-byId("verificationForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const orderId = byId("verifyOrderId").value.trim();
-  const fullName = byId("verifyFullName").value.trim();
-  if (!orderId || !fullName) {
-    setVerificationMessage("error", "Please enter your Order ID and full name.");
-    return;
-  }
-  byId("verifyButton").disabled = true;
-  byId("verifyButton").textContent = "Verifying...";
-  setVerificationMessage("loading", "Verifying...");
-  window.setTimeout(() => {
-    byId("verifyButton").disabled = false;
-    byId("verifyButton").textContent = "VERIFY";
-    if (orderId.toUpperCase() === mockOrder.id && fullName.length > 1) {
-      setVerificationMessage("success", "Verification Successful. Access Granted.");
-      window.setTimeout(() => {
-        showLoadingBefore(() => {
-          showCustomerPortal("order");
-          setCustomerTab("overview");
-        });
-      }, 500);
-    } else {
-      setVerificationMessage("error", "Order ID or Full Name is incorrect.");
-    }
-  }, 700);
-});
-document.querySelectorAll("[data-customer-tab]").forEach(button => {
-  button.addEventListener("click", () => setCustomerTab(button.dataset.customerTab));
-});
-byId("chatForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const input = byId("chatInput");
-  const body = input.value.trim();
-  if (!body) return;
-  state.chatMessages.push({ sender: "Customer", body });
-  input.value = "";
-  renderChatMessages();
-});
 byId("supportReplyForm").addEventListener("submit", event => {
   event.preventDefault();
   const input = byId("supportReplyInput");
@@ -730,11 +591,18 @@ document.addEventListener("keydown", event => {
 
 loadSupportThreads();
 renderAll();
-renderCustomerPortal();
-window.setTimeout(() => {
-  const loadingScreen = byId("loadingScreen");
-  if (!loadingScreen) return;
-  loadingScreen.classList.remove("is-title");
-  loadingScreen.classList.add("is-black");
-}, 1300);
-window.setTimeout(finishLoading, 3200);
+setRoute(state.route);
+const hasActiveStaffSession = sessionStorage.getItem("washwizStaffLoggedIn") === "true";
+if (hasActiveStaffSession) {
+  byId("auth").classList.add("hidden");
+  byId("app").classList.remove("hidden");
+  byId("loadingScreen")?.remove();
+} else {
+  window.setTimeout(() => {
+    const loadingScreen = byId("loadingScreen");
+    if (!loadingScreen) return;
+    loadingScreen.classList.remove("is-title");
+    loadingScreen.classList.add("is-black");
+  }, 1300);
+  window.setTimeout(finishLoading, 3200);
+}
