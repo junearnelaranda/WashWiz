@@ -4,6 +4,8 @@ const state = {
   selectedMachine: null,
   supplies: {},
   verificationState: "default",
+  activeSupportThread: "juan-order",
+  supportFilter: "all",
   chatMessages: [
     { sender: "Admin", body: "Hello Juan! Your order is now being processed." },
     { sender: "Customer", body: "Thank you. When will it be ready?" },
@@ -56,6 +58,87 @@ const mockOrder = {
   ]
 };
 
+const supportThreads = [
+  {
+    id: "juan-order",
+    customer: "Juan Dela Cruz",
+    orderId: "LW7K4M9Q2X8R6P3",
+    machine: "W-02",
+    machineLabel: "Large Washer",
+    status: "active",
+    urgency: "Live Active",
+    lastSeen: "2m ago",
+    eta: "18 min left",
+    total: 800,
+    paid: true,
+    tag: "Machine W-02",
+    preview: "Great! Can I also request the hypoallergenic detergent?",
+    messages: [
+      { sender: "Admin", body: "Hello Juan! Your order is now being processed.", time: "10:14 AM" },
+      { sender: "Customer", body: "Thank you. When will it be ready?", time: "10:16 AM" },
+      { sender: "Admin", body: "Expected completion is August 30.", time: "10:17 AM" },
+      { sender: "Customer", body: "Great! Can I also request the hypoallergenic detergent for the rinse cycle?", time: "10:20 AM" }
+    ]
+  },
+  {
+    id: "maria-order",
+    customer: "Maria Santos",
+    orderId: "LWM9Z0387B",
+    machine: "D-01",
+    machineLabel: "Large Dryer",
+    status: "pending",
+    urgency: "Action Required",
+    lastSeen: "14m ago",
+    eta: "Ready now",
+    total: 420,
+    paid: false,
+    tag: "Machine D-01",
+    preview: "Can I add fabric conditioner to my wash?",
+    messages: [
+      { sender: "Customer", body: "Can I add fabric conditioner to my wash?", time: "10:06 AM" }
+    ]
+  },
+  {
+    id: "carlos-order",
+    customer: "Carlos Reyes",
+    orderId: "LW4P8B102",
+    machine: "W-03",
+    machineLabel: "XLarge Washer",
+    status: "active",
+    urgency: "Cycle Finished",
+    lastSeen: "1h ago",
+    eta: "Cycle finished",
+    total: 960,
+    paid: true,
+    tag: "Machine W-03",
+    preview: "Is machine W-03 ready for pickup?",
+    messages: [
+      { sender: "Customer", body: "Is machine W-03 ready for pickup?", time: "9:32 AM" },
+      { sender: "Admin", body: "It just finished. We are preparing your items now.", time: "9:38 AM" }
+    ]
+  },
+  {
+    id: "elena-order",
+    customer: "Elena Ramos",
+    orderId: "LW1B5Z099",
+    machine: "D-02",
+    machineLabel: "XLarge Dryer",
+    status: "resolved",
+    urgency: "Resolved",
+    lastSeen: "2h ago",
+    eta: "Completed",
+    total: 500,
+    paid: true,
+    tag: "Completed",
+    preview: "Payment of PHP 800 confirmed via GCash.",
+    messages: [
+      { sender: "Customer", body: "Payment of PHP 800 confirmed via GCash.", time: "8:20 AM" },
+      { sender: "Admin", body: "Thanks Elena, your payment has been posted.", time: "8:24 AM" }
+    ]
+  }
+];
+
+const supportStorageKey = "washwizSupportThreads";
 const money = value => `PHP ${value.toLocaleString("en-PH")}`;
 const byId = id => document.getElementById(id);
 const statusLabel = status => status === "maintenance" ? "Service" : status.replace(/\b\w/g, char => char.toUpperCase());
@@ -96,6 +179,16 @@ function showAuthScreen() {
   byId("customerPortal").classList.add("hidden");
   byId("app").classList.add("hidden");
   byId("auth").classList.remove("hidden");
+}
+
+function logOutStaff() {
+  showLoadingBefore(() => {
+    byId("app").classList.add("hidden");
+    byId("customerPortal").classList.add("hidden");
+    byId("auth").classList.remove("hidden");
+    document.querySelector(".sidebar").classList.remove("open");
+    setRoute("dashboard");
+  }, 650);
 }
 
 function renderCustomerPortal() {
@@ -184,6 +277,115 @@ function closeCustomerAccessModal() {
   byId("customerAccessModal").classList.add("hidden");
 }
 
+function supportInitials(name) {
+  return name.split(" ").map(part => part[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function activeSupportThread() {
+  return supportThreads.find(thread => thread.id === state.activeSupportThread) || supportThreads[0];
+}
+
+function loadSupportThreads() {
+  try {
+    const storedThreads = JSON.parse(localStorage.getItem(supportStorageKey) || "[]");
+    storedThreads.forEach(storedThread => {
+      const thread = supportThreads.find(item => item.id === storedThread.id);
+      if (thread) Object.assign(thread, storedThread);
+    });
+  } catch {
+    localStorage.removeItem(supportStorageKey);
+  }
+}
+
+function saveSupportThreads() {
+  localStorage.setItem(supportStorageKey, JSON.stringify(supportThreads));
+}
+
+function filteredSupportThreads() {
+  const term = byId("supportSearch")?.value?.trim().toLowerCase() || "";
+  return supportThreads.filter(thread => {
+    const matchesFilter = state.supportFilter === "all" || thread.status === state.supportFilter;
+    const matchesSearch = [thread.customer, thread.orderId, thread.machine, thread.preview].join(" ").toLowerCase().includes(term);
+    return matchesFilter && matchesSearch;
+  });
+}
+
+function renderSupportInbox() {
+  const threads = filteredSupportThreads();
+  byId("supportBadge").textContent = supportThreads.filter(thread => thread.status !== "resolved").length;
+  byId("supportThreads").innerHTML = threads.length ? threads.map(thread => `
+    <button class="support-thread ${thread.id === state.activeSupportThread ? "active" : ""}" type="button" data-support-thread="${thread.id}">
+      <span class="support-avatar">${supportInitials(thread.customer)}</span>
+      <span class="support-thread-main">
+        <strong>${thread.customer}</strong>
+        <small>#${thread.orderId}</small>
+        <em>${thread.preview}</em>
+        <span class="mini-chip">${thread.tag}</span>
+      </span>
+      <span class="support-thread-meta">
+        <small>${thread.lastSeen}</small>
+        <b class="${thread.status}">${thread.urgency}</b>
+      </span>
+    </button>
+  `).join("") : `<p class="empty-state compact-empty">No matching chats.</p>`;
+}
+
+function renderSupportChat() {
+  const thread = activeSupportThread();
+  byId("supportCustomerName").textContent = thread.customer;
+  byId("supportOrderLabel").textContent = `Regarding Order ${thread.orderId}`;
+  byId("supportStatusLabel").textContent = thread.urgency;
+  byId("supportStatusLabel").className = `status-pill ${thread.status === "resolved" ? "success" : thread.status === "pending" ? "warning" : "success"}`;
+  byId("supportOrderStrip").innerHTML = `
+    <div><span>Machine</span><strong>${thread.machine} ${thread.machineLabel}</strong></div>
+    <div><span>Customer</span><strong>${thread.customer}</strong></div>
+    <div><span>Revenue</span><strong>${money(thread.total)} ${thread.paid ? "(Paid)" : "(Unpaid)"}</strong></div>
+    <div><span>Status</span><strong>${thread.eta}</strong></div>
+  `;
+  byId("supportMessages").innerHTML = thread.messages.map(message => `
+    <div class="support-message ${message.sender === "Customer" ? "customer" : "admin"}">
+      <span>${message.sender}</span>
+      <p>${message.body}</p>
+      <small>${message.time}</small>
+    </div>
+  `).join("");
+  byId("resolveSupportThread").disabled = thread.status === "resolved";
+  byId("resolveSupportThread").textContent = thread.status === "resolved" ? "Resolved" : "Mark Resolved";
+}
+
+function renderSupport() {
+  renderSupportInbox();
+  renderSupportChat();
+}
+
+function setSupportThread(threadId) {
+  state.activeSupportThread = threadId;
+  renderSupport();
+}
+
+function sendSupportReply(text) {
+  const thread = activeSupportThread();
+  thread.messages.push({ sender: "Admin", body: text, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+  thread.preview = text;
+  thread.lastSeen = "Just now";
+  if (thread.status === "pending") {
+    thread.status = "active";
+    thread.urgency = "Live Active";
+  }
+  saveSupportThreads();
+  renderSupport();
+}
+
+function resolveSupportThread() {
+  const thread = activeSupportThread();
+  thread.status = "resolved";
+  thread.urgency = "Resolved";
+  thread.preview = "Marked resolved by staff.";
+  thread.lastSeen = "Just now";
+  saveSupportThreads();
+  renderSupport();
+}
+
 function setRoute(route) {
   state.route = route;
   document.querySelectorAll(".view").forEach(view => view.classList.toggle("active-view", view.id === route));
@@ -199,6 +401,7 @@ function setRoute(route) {
     confirmed: ["Success", "Booking Confirmed"],
     bookings: ["Operations", "Bookings Management"],
     customers: ["Relationships", "Customers"],
+    support: ["Customer Inquiries", "WashWiz Staff Chat"],
     revenue: ["Analytics", "Revenue & Analytics"]
   };
   byId("routeEyebrow").textContent = titles[route][0];
@@ -391,6 +594,7 @@ function renderAll() {
   renderSupplies();
   renderTables();
   renderCharts();
+  renderSupport();
 }
 
 document.addEventListener("click", event => {
@@ -432,6 +636,22 @@ document.addEventListener("click", event => {
 
   const printButton = event.target.closest("[data-print-qr]");
   if (printButton) showAccessMessage(printButton, "Print preview is mocked for now.");
+
+  const supportThreadButton = event.target.closest("[data-support-thread]");
+  if (supportThreadButton) setSupportThread(supportThreadButton.dataset.supportThread);
+
+  const supportFilterButton = event.target.closest("[data-support-filter]");
+  if (supportFilterButton) {
+    state.supportFilter = supportFilterButton.dataset.supportFilter;
+    document.querySelectorAll("[data-support-filter]").forEach(button => button.classList.toggle("active", button === supportFilterButton));
+    renderSupportInbox();
+  }
+
+  const quickReplyButton = event.target.closest("[data-quick-reply]");
+  if (quickReplyButton) {
+    byId("supportReplyInput").value = quickReplyButton.dataset.quickReply;
+    byId("supportReplyInput").focus();
+  }
 });
 
 byId("loginForm").addEventListener("submit", event => {
@@ -451,7 +671,9 @@ byId("registerForm").addEventListener("submit", event => {
 byId("continueSupplies").addEventListener("click", () => { renderSupplies(); setRoute("supplies"); });
 byId("confirmBooking").addEventListener("click", confirmBooking);
 byId("customerSearch").addEventListener("input", renderCustomers);
+byId("supportSearch").addEventListener("input", renderSupportInbox);
 byId("menuToggle").addEventListener("click", () => document.querySelector(".sidebar").classList.toggle("open"));
+byId("logoutButton").addEventListener("click", logOutStaff);
 byId("openVerification")?.addEventListener("click", () => showCustomerPortal("verify"));
 byId("backToAuth").addEventListener("click", showAuthScreen);
 byId("verificationForm").addEventListener("submit", event => {
@@ -493,10 +715,20 @@ byId("chatForm").addEventListener("submit", event => {
   input.value = "";
   renderChatMessages();
 });
+byId("supportReplyForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = byId("supportReplyInput");
+  const body = input.value.trim();
+  if (!body) return;
+  sendSupportReply(body);
+  input.value = "";
+});
+byId("resolveSupportThread").addEventListener("click", resolveSupportThread);
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") closeCustomerAccessModal();
 });
 
+loadSupportThreads();
 renderAll();
 renderCustomerPortal();
 window.setTimeout(() => {

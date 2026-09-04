@@ -28,6 +28,7 @@ const sessionState = {
   ]
 };
 
+const supportStorageKey = "washwizSupportThreads";
 const sessionById = id => document.getElementById(id);
 
 function requestedOrderId() {
@@ -85,6 +86,48 @@ function renderSessionChat() {
   sessionById("chatEmpty").classList.toggle("hidden", sessionState.chatMessages.length > 0);
 }
 
+function persistCustomerSupportMessage(body) {
+  const orderId = requestedOrderId().toUpperCase();
+  const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  let storedThreads = [];
+  try {
+    storedThreads = JSON.parse(localStorage.getItem(supportStorageKey) || "[]");
+  } catch {
+    storedThreads = [];
+  }
+  let thread = storedThreads.find(item => item.id === "juan-order");
+  if (!thread) {
+    thread = {
+      id: "juan-order",
+      customer: sessionOrder.customer,
+      orderId,
+      machine: "W-02",
+      machineLabel: "Large Washer",
+      status: "active",
+      urgency: "Live Active",
+      lastSeen: "Just now",
+      eta: "18 min left",
+      total: 800,
+      paid: true,
+      tag: "Machine W-02",
+      preview: body,
+      messages: [
+        { sender: "Admin", body: "Hello Juan! Your order is now being processed.", time: "10:14 AM" },
+        { sender: "Customer", body: "Thank you. When will it be ready?", time: "10:16 AM" },
+        { sender: "Admin", body: "Expected completion is August 30.", time: "10:17 AM" }
+      ]
+    };
+    storedThreads.push(thread);
+  }
+  thread.orderId = orderId;
+  thread.status = "active";
+  thread.urgency = "Live Active";
+  thread.lastSeen = "Just now";
+  thread.preview = body;
+  thread.messages.push({ sender: "Customer", body, time: now });
+  localStorage.setItem(supportStorageKey, JSON.stringify(storedThreads));
+}
+
 function setSessionTab(tab) {
   sessionState.customerTab = tab;
   document.querySelectorAll("[data-customer-tab]").forEach(button => {
@@ -105,8 +148,13 @@ sessionById("chatForm").addEventListener("submit", event => {
   const body = input.value.trim();
   if (!body) return;
   sessionState.chatMessages.push({ sender: "Customer", body });
+  persistCustomerSupportMessage(body);
   input.value = "";
   renderSessionChat();
+});
+
+sessionById("sessionLogout").addEventListener("click", () => {
+  window.location.href = "customer.html";
 });
 
 renderSessionOrder();

@@ -186,6 +186,7 @@
           <button class="nav-link" data-route="bookings">Bookings</button>
           <button class="nav-link" data-route="customers">Customers</button>
           <button class="nav-link" data-route="revenue">Revenue</button>
+          <button class="nav-link live-support-link" data-route="support">Live Support <span id="supportBadge">3</span></button>
         </nav>
       </aside>
 
@@ -200,6 +201,7 @@
             <button class="icon-btn" aria-label="Search"><span aria-hidden="true">S</span></button>
             <button class="icon-btn" aria-label="Notifications"><span aria-hidden="true">!</span></button>
             <button class="avatar" aria-label="Operator profile">AM</button>
+            <button class="secondary-btn compact logout-btn" type="button" id="logoutButton">Log Out</button>
           </div>
         </header>
 
@@ -293,6 +295,46 @@
               <thead><tr><th>Customer Name</th><th>Contact</th><th>Total Bookings</th><th>Last Visit</th><th>Spend</th><th>Action</th></tr></thead>
               <tbody id="customersTable"></tbody>
             </table>
+          </div>
+        </section>
+
+        <section id="support" class="view">
+          <div class="support-layout">
+            <aside class="support-inbox clay">
+              <input id="supportSearch" class="search-input" type="search" placeholder="Search chats">
+              <div class="segmented support-filters" id="supportFilter">
+                <button class="active" type="button" data-support-filter="all">All</button>
+                <button type="button" data-support-filter="active">Active</button>
+                <button type="button" data-support-filter="pending">Pending</button>
+              </div>
+              <div class="support-thread-list" id="supportThreads"></div>
+            </aside>
+
+            <article class="support-chat clay">
+              <header class="support-chat-head">
+                <div>
+                  <p class="eyebrow">Order Support</p>
+                  <h3 id="supportCustomerName">Customer Chat</h3>
+                  <p id="supportOrderLabel"></p>
+                </div>
+                <span class="status-pill success" id="supportStatusLabel">Live Active</span>
+              </header>
+
+              <div class="support-order-strip" id="supportOrderStrip"></div>
+              <div class="support-messages" id="supportMessages"></div>
+
+              <div class="quick-replies" id="quickReplies" aria-label="Quick replies">
+                <button type="button" data-quick-reply="Your wash is now in progress.">Wash in progress</button>
+                <button type="button" data-quick-reply="We added your detergent preference to the order.">Preference noted</button>
+                <button type="button" data-quick-reply="Your order is ready for pickup.">Ready for pickup</button>
+              </div>
+
+              <form id="supportReplyForm" class="support-composer">
+                <input id="supportReplyInput" type="text" placeholder="Reply to customer">
+                <button class="primary-btn compact" type="submit">Send</button>
+              </form>
+              <button class="secondary-btn compact support-resolve" type="button" id="resolveSupportThread">Mark Resolved</button>
+            </article>
           </div>
         </section>
 
