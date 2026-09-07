@@ -8,13 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="theme.css">
   </head>
-  <body>
+  <body class="washwiz-theme" data-page="customer-portal">
     <main class="customer-page-shell">
       <section class="customer-hero">
-        <a class="secondary-btn compact customer-home-link" href="index.html">Staff Login</a>
+        <a class="secondary-btn compact customer-home-link" href="index.html">Facility Login</a>
         <img class="customer-page-logo" src="tempLogo.png" alt="WashWiz wizard washing machine logo">
-        <p class="eyebrow">Customer page</p>
+        <div class="portal-brand"><strong>WashWiz</strong></div>
         <div class="customer-action-row">
           <button class="primary-btn active" type="button" data-customer-section="bookService">Book Now</button>
           <button class="secondary-btn" type="button" data-customer-section="verifyOrder">Verify Order</button>

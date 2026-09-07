@@ -109,42 +109,69 @@ const supportThreads = [
 ];
 
 const supportStorageKey = "washwizSupportThreads";
+const facilityRouteLoadingKey = "washwizFacilityRouteLoading";
+const facilityPageFiles = new Set(["index.html", "bookings.html", "details.html", "revenue.html", "support.html", "settings.html"]);
+const facilityPageRoutes = {
+  "index.html": "dashboard",
+  "bookings.html": "bookings",
+  "details.html": "customers",
+  "revenue.html": "revenue",
+  "support.html": "support",
+  "settings.html": "settings"
+};
 const money = value => `PHP ${value.toLocaleString("en-PH")}`;
 const byId = id => document.getElementById(id);
 const statusLabel = status => status === "maintenance" ? "Service" : status.replace(/\b\w/g, char => char.toUpperCase());
 const statusClass = value => value.toLowerCase().includes("complete") || value.toLowerCase().includes("paid") ? "available" : value.toLowerCase().includes("service") || value.toLowerCase().includes("maintenance") ? "maintenance" : "occupied";
+let loadingTransitionActive = false;
 
 function finishLoading() {
   const loadingScreen = byId("loadingScreen");
   if (!loadingScreen) return;
   loadingScreen.classList.add("is-done");
+  loadingTransitionActive = false;
 }
 
-function showLoadingBefore(callback, delay = 1100) {
+function setLoadingMode(mode) {
   const loadingScreen = byId("loadingScreen");
+  if (!loadingScreen) return null;
+  loadingScreen.classList.remove("is-title");
+  loadingScreen.classList.remove("is-black");
+  loadingScreen.classList.remove("is-brand");
+  loadingScreen.classList.remove("is-washer");
+  loadingScreen.classList.remove("is-skeleton");
+  loadingScreen.classList.add(mode);
+  loadingScreen.classList.remove("is-done");
+  return loadingScreen;
+}
+
+function showLoadingBefore(callback, options = {}) {
+  const { delay = 520, finish = true, mode = "is-washer" } = options;
+  const loadingScreen = setLoadingMode(mode);
   if (!loadingScreen) {
     callback();
     return;
   }
-  loadingScreen.classList.remove("is-title");
-  loadingScreen.classList.remove("is-black");
-  loadingScreen.classList.remove("is-brand");
-  loadingScreen.classList.add("is-washer");
-  loadingScreen.classList.remove("is-done");
+  if (loadingTransitionActive) return;
+  loadingTransitionActive = true;
   window.setTimeout(() => {
     callback();
-    window.setTimeout(finishLoading, 180);
+    if (finish) window.setTimeout(finishLoading, 180);
   }, delay);
 }
 
-function logOutStaff() {
-  sessionStorage.removeItem("washwizStaffLoggedIn");
+function showWasherRouteBefore(callback, delay = 720) {
+  showLoadingBefore(callback, { delay, finish: false, mode: "is-washer" });
+}
+
+function logOutFacility() {
+  sessionStorage.removeItem("washwizFacilityLoggedIn");
   showLoadingBefore(() => {
     byId("app").classList.add("hidden");
     byId("auth").classList.remove("hidden");
     document.querySelector(".sidebar").classList.remove("open");
     setRoute("dashboard");
-  }, 650);
+  }, { delay: 520, mode: "is-washer" });
 }
 
 function showAccessMessage(source, text) {
@@ -278,7 +305,7 @@ function resolveSupportThread() {
   const thread = activeSupportThread();
   thread.status = "resolved";
   thread.urgency = "Resolved";
-  thread.preview = "Marked resolved by staff.";
+  thread.preview = "Marked resolved by the facility.";
   thread.lastSeen = "Just now";
   saveSupportThreads();
   renderSupport();
@@ -290,33 +317,83 @@ function setRoute(route) {
   document.querySelectorAll(".nav-link").forEach(link => {
     const active = link.dataset.pageLink === route;
     link.classList.toggle("active", active);
-    link.toggleAttribute("aria-current", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   });
   const titles = {
-    dashboard: ["Today", "WashWiz Dashboard"],
+    dashboard: ["Today", "Dashboard"],
     machines: ["Booking flow", "Select Machine"],
     supplies: ["Booking flow", "Wash Supplies"],
     confirmed: ["Success", "Booking Confirmed"],
     bookings: ["Operations", "Bookings Management"],
     customers: ["Relationships", "Customers"],
-    support: ["Customer Inquiries", "WashWiz Staff Chat"],
-    revenue: ["Analytics", "Revenue & Analytics"]
+    support: ["Customer Inquiries", "WashWiz Facility Support"],
+    revenue: ["Analytics", "Revenue & Analytics"],
+    settings: ["Preferences", "Facility Settings"]
   };
   byId("routeEyebrow").textContent = titles[route][0];
   byId("routeTitle").textContent = titles[route][1];
   document.querySelector(".sidebar").classList.remove("open");
 }
 
+function transitionRoute(route, beforeRoute) {
+  if (!route) return;
+  beforeRoute?.();
+  setRoute(route);
+}
+
+function facilityPageName(url) {
+  return url.pathname.split("/").filter(Boolean).pop() || "index.html";
+}
+
+function isFacilityPageLink(link) {
+  const target = new URL(link.getAttribute("href"), location.href);
+  return target.origin === location.origin && facilityPageFiles.has(facilityPageName(target));
+}
+
+function handleFacilityPageNavigation(event) {
+  const link = event.target.closest("a[href]");
+  if (!link || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
+  if (link.target && link.target !== "_self") return false;
+  if (!isFacilityPageLink(link)) return false;
+
+  const target = new URL(link.getAttribute("href"), location.href);
+  const currentPage = facilityPageName(new URL(location.href));
+  const isSamePage = target.pathname === location.pathname || facilityPageName(target) === currentPage;
+
+  event.preventDefault();
+  if (isSamePage) {
+    transitionRoute(link.dataset.pageLink || facilityPageRoutes[facilityPageName(target)]);
+    return true;
+  }
+
+  sessionStorage.setItem(facilityRouteLoadingKey, "true");
+  showWasherRouteBefore(() => {
+    location.href = target.href;
+  });
+  return true;
+}
+
 function machineCard(machine, selectable = false) {
   const disabled = machine.status !== "available";
   const selected = state.selectedMachine?.id === machine.id;
+  const dashboardCard = !selectable && document.body.dataset.page === "dashboard";
+  const statusDetails = {
+    available: ["circle-check", "Ready for use", "Ready to load"],
+    occupied: ["circle-alert", machine.type === "dryer" ? "Drying Cycle" : "Cycle in progress", "Occupied"],
+    maintenance: ["triangle-alert", "Maintenance", "Under service"]
+  };
+  const [statusIcon, statusTitle, statusNote] = statusDetails[machine.status];
   return `
-    <article class="machine-card clay ${machine.status} ${selected ? "selected" : ""}">
+    <article class="machine-card clay ${machine.status} ${selected ? "selected" : ""}" ${dashboardCard ? `data-dashboard-machine-id="${machine.id}" tabindex="-1"` : ""}>
       <div class="machine-top">
         <span class="machine-id">${machine.id}</span>
         <span class="badge ${machine.status}">${statusLabel(machine.status)}</span>
       </div>
-      <div class="machine-visual"></div>
+      ${dashboardCard ? `<div class="dashboard-machine-state">
+        <span class="machine-state-icon">${dashboardIcon(statusIcon)}</span>
+        <span class="machine-state-copy"><strong>${statusTitle}</strong><small>${statusNote}</small></span>
+      </div>` : '<div class="machine-visual"></div>'}
       <p><strong>${machine.label}</strong><br><span>${machine.load} capacity</span><span>${machine.eta}</span></p>
       ${selectable ? `<button class="select-btn" data-machine="${machine.id}" ${disabled ? "disabled" : ""} aria-label="${disabled ? `${machine.id} unavailable` : `Select ${machine.id} for ${money(machine.price)}`}">${disabled ? "Unavailable" : selected ? "Selected" : `Select - ${money(machine.price)}`}</button>` : ""}
     </article>
@@ -334,12 +411,23 @@ function renderMetrics() {
   const revenue = state.bookings.reduce((sum, booking) => sum + booking.total, 0);
   const averageTicket = state.bookings.length ? Math.round(revenue / state.bookings.length) : 0;
   const metrics = [
-    ["Total Machines", machines.length, "2 service zones online"],
-    ["Available", available, "Ready for walk-ins"],
-    ["Active Cycles", occupied, "Average 21 minutes left"],
-    ["Today's Revenue", money(revenue), "From confirmed bookings"]
+    ["Total Machines", machines.length, "2 service zones online", "up", "4,18 16,12 27,15 39,7 52,10"],
+    ["Available", available, "Ready for walk-ins", "up", "4,19 15,15 27,16 39,10 52,5"],
+    ["Active Cycles", occupied, "Currently running", "down", "4,7 16,11 27,9 39,15 52,18"],
+    ["Today's Revenue", money(revenue), "From confirmed bookings", "up", "4,18 16,16 27,12 39,13 52,6"]
   ];
-  byId("metrics").innerHTML = metrics.map(([label, value, note]) => `<article class="metric clay"><span>${label}</span><b>${value}</b><p>${note}</p></article>`).join("");
+  byId("metrics").innerHTML = metrics.map(([label, value, note, trend, sparkline]) => `
+    <article class="metric clay trend-${trend}">
+      <div class="metric-head">
+        <span>${label}</span>
+        <svg class="metric-sparkline" viewBox="0 0 56 24" aria-hidden="true">
+          <polyline points="${sparkline}"></polyline>
+        </svg>
+      </div>
+      <b>${value}</b>
+      <p>${note}</p>
+    </article>
+  `).join("");
   byId("revenueMetrics").innerHTML = [
     ["Monthly Total", money(revenue), "+12.5% vs last month"],
     ["Average Ticket Size", money(averageTicket), "+3.2% vs last month"],
@@ -354,26 +442,30 @@ function supplyRevenue() {
 
 function customers() {
   const map = new Map();
+  // New bookings are prepended, so the first record has the latest contact and visit.
   state.bookings.forEach(booking => {
     const current = map.get(booking.customer) || { name: booking.customer, contact: booking.contact, count: 0, spend: 0, last: booking.time };
     current.count += 1;
     current.spend += booking.total;
-    current.last = booking.time;
     map.set(booking.customer, current);
   });
   return [...map.values()];
 }
 
 function renderTables() {
-  byId("bookingsTable").innerHTML = state.bookings.length ? state.bookings.map(booking => `
-    <tr>
-      <td data-label="Customer"><strong>${booking.customer}</strong><br><small>${booking.contact}</small></td>
-      <td data-label="Machine">${booking.machine}<br><small>${booking.type}</small></td>
-      <td data-label="Status"><span class="badge ${statusClass(booking.status)}">${booking.status}</span></td>
-      <td data-label="Time">${booking.time}</td>
-      <td data-label="Total">${money(booking.total)}</td>
-    </tr>
-  `).join("") : `<tr><td class="empty-state" colspan="5"><strong>No bookings yet</strong><br><small>New paid bookings will appear here as soon as they are confirmed.</small></td></tr>`;
+  if (typeof window.renderBookingsPage === "function") {
+    window.renderBookingsPage();
+  } else {
+    byId("bookingsTable").innerHTML = state.bookings.length ? state.bookings.map(booking => `
+      <tr>
+        <td data-label="Customer"><strong>${booking.customer}</strong><br><small>${booking.contact}</small></td>
+        <td data-label="Machine">${booking.machine}<br><small>${booking.type}</small></td>
+        <td data-label="Status"><span class="badge ${statusClass(booking.status)}">${booking.status}</span></td>
+        <td data-label="Time">${booking.time}</td>
+        <td data-label="Total">${money(booking.total)}</td>
+      </tr>
+    `).join("") : `<tr><td class="empty-state" colspan="5"><strong>No bookings yet</strong><br><small>New paid bookings will appear here as soon as they are confirmed.</small></td></tr>`;
+  }
   renderCustomers();
   renderTransactions();
 }
@@ -391,6 +483,10 @@ function renderTransactions() {
 }
 
 function renderCustomers() {
+  if (typeof window.renderCustomersPage === "function") {
+    window.renderCustomersPage();
+    return;
+  }
   const term = byId("customerSearch")?.value?.toLowerCase() || "";
   const rows = customers()
     .filter(customer => customer.name.toLowerCase().includes(term) || customer.contact.toLowerCase().includes(term))
@@ -431,7 +527,7 @@ function renderOrderSummary() {
 
 function renderCharts() {
   const days = [["Mon", 520], ["Tue", 680], ["Wed", 610], ["Thu", 820], ["Fri", 960], ["Sat", 1240], ["Sun", 1040]];
-  byId("barChart").innerHTML = days.map(([day, value]) => `<div class="bar" style="height:${value / 13}px"><span>${day}</span></div>`).join("");
+  byId("barChart").innerHTML = days.map(([day, value]) => `<div class="bar" style="height:${value / 9}px"><span>${day}</span></div>`).join("");
   const usage = [["Washers", 72], ["Dryers", 54], ["XLarge Machines", 38], ["Supply Attach", 46]];
   byId("usageList").innerHTML = usage.map(([label, value]) => `
     <div class="usage-row">
@@ -456,7 +552,7 @@ function chooseMachine(id) {
 
 function confirmBooking() {
   if (!state.selectedMachine) {
-    setRoute("machines");
+    transitionRoute("machines");
     byId("selectedMachineMeta").textContent = "Select an available machine before continuing.";
     byId("selectedMachineMeta").classList.add("form-note", "error");
     return;
@@ -482,7 +578,7 @@ function confirmBooking() {
   byId("selectedMachineMeta").textContent = "Available washers and dryers are ready to book.";
   byId("selectedMachineMeta").classList.remove("form-note", "error");
   renderAll();
-  setRoute("confirmed");
+  transitionRoute("confirmed");
 }
 
 function renderAll() {
@@ -496,8 +592,10 @@ function renderAll() {
 }
 
 document.addEventListener("click", event => {
+  if (handleFacilityPageNavigation(event)) return;
+
   const routeButton = event.target.closest("[data-route]");
-  if (routeButton) setRoute(routeButton.dataset.route);
+  if (routeButton) transitionRoute(routeButton.dataset.route);
 
   const authTab = event.target.closest("[data-auth-tab]");
   if (authTab) {
@@ -509,7 +607,10 @@ document.addEventListener("click", event => {
   const filterButton = event.target.closest("#machineFilter button, #bookingMachineFilter button");
   if (filterButton) {
     const group = filterButton.parentElement;
-    group.querySelectorAll("button").forEach(button => button.classList.toggle("active", button === filterButton));
+    group.querySelectorAll("button").forEach(button => {
+      button.classList.toggle("active", button === filterButton);
+      button.setAttribute("aria-pressed", String(button === filterButton));
+    });
     renderMachines(group.id === "machineFilter" ? "dashboardMachines" : "bookingMachines", filterButton.dataset.filter, group.id !== "machineFilter");
   }
 
@@ -555,27 +656,33 @@ document.addEventListener("click", event => {
 byId("loginForm").addEventListener("submit", event => {
   event.preventDefault();
   showLoadingBefore(() => {
-    sessionStorage.setItem("washwizStaffLoggedIn", "true");
+    sessionStorage.setItem("washwizFacilityLoggedIn", "true");
     setRoute(document.body.dataset.page || "dashboard");
     byId("auth").classList.add("hidden");
     byId("app").classList.remove("hidden");
-  });
+  }, { delay: 560, mode: "is-skeleton" });
 });
 byId("registerForm").addEventListener("submit", event => {
   event.preventDefault();
+  const facility = window.WashWizSettings.load();
+  facility.profile.name = byId("facilityName").value.trim();
+  facility.profile.email = byId("facilityEmail").value.trim();
+  window.WashWizSettings.save(facility);
   showLoadingBefore(() => {
-    sessionStorage.setItem("washwizStaffLoggedIn", "true");
+    sessionStorage.setItem("washwizFacilityLoggedIn", "true");
     setRoute(document.body.dataset.page || "dashboard");
     byId("auth").classList.add("hidden");
     byId("app").classList.remove("hidden");
-  });
+  }, { delay: 560, mode: "is-skeleton" });
 });
-byId("continueSupplies").addEventListener("click", () => { renderSupplies(); setRoute("supplies"); });
+byId("continueSupplies").addEventListener("click", () => {
+  transitionRoute("supplies", renderSupplies);
+});
 byId("confirmBooking").addEventListener("click", confirmBooking);
 byId("customerSearch").addEventListener("input", renderCustomers);
 byId("supportSearch").addEventListener("input", renderSupportInbox);
 byId("menuToggle").addEventListener("click", () => document.querySelector(".sidebar").classList.toggle("open"));
-byId("logoutButton").addEventListener("click", logOutStaff);
+byId("logoutButton").addEventListener("click", logOutFacility);
 byId("supportReplyForm").addEventListener("submit", event => {
   event.preventDefault();
   const input = byId("supportReplyInput");
@@ -592,11 +699,15 @@ document.addEventListener("keydown", event => {
 loadSupportThreads();
 renderAll();
 setRoute(state.route);
-const hasActiveStaffSession = sessionStorage.getItem("washwizStaffLoggedIn") === "true";
-if (hasActiveStaffSession) {
+const hasActiveFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true";
+if (hasActiveFacilitySession) {
   byId("auth").classList.add("hidden");
-  byId("app").classList.remove("hidden");
-  byId("loadingScreen")?.remove();
+  const initialLoader = byId("loadingScreen")?.dataset.initialLoader;
+  sessionStorage.removeItem(facilityRouteLoadingKey);
+  window.setTimeout(() => {
+    byId("app").classList.remove("hidden");
+    finishLoading();
+  }, initialLoader === "route" ? 760 : 520);
 } else {
   window.setTimeout(() => {
     const loadingScreen = byId("loadingScreen");

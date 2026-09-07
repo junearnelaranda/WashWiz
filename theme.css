@@ -1,0 +1,234 @@
+/* Shared visual tokens. Page styles own layout; this file owns the WashWiz theme. */
+.facility-profile-photo { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+body.hide-support-count #app #supportBadge { display: none; }
+body.hide-alert-indicator .dashboard-alert-button::after { content: none; }
+body.washwiz-theme {
+  --canvas: #e8eef7;
+  --raised: 7px 7px 18px #b6c5d866, -7px -7px 18px #ffffffd9;
+  --raised-small: 4px 4px 10px #b6c5d880, -4px -4px 10px #ffffffe6;
+  --pressed: inset 3px 3px 7px #b6c5d880, inset -3px -3px 7px #ffffffe6;
+  --panel-radius: 24px;
+  --control-radius: 14px;
+  --bg: var(--canvas);
+  --surface: var(--canvas);
+  --surface-muted: #e2eaf5;
+  --surface-strong: #dbe5f2;
+  --text: #10284d;
+  --muted: #566b87;
+  --subtle: #657a96;
+  --line: #cddbed;
+  --line-strong: #c1d0e3;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #dfebff;
+  --success: #047857;
+  --success-soft: #d9f5e9;
+  --warning: #a4540b;
+  --warning-soft: #fff0d5;
+  --danger: #d62350;
+  --danger-soft: #ffe3e8;
+  --shadow-sm: var(--raised-small);
+  --shadow-md: var(--raised);
+  --shadow-inset: var(--pressed);
+  --radius: var(--control-radius);
+  --dashboard-bg: var(--canvas);
+  --customer-bg: var(--canvas);
+  --support-bg: var(--canvas);
+  --revenue-bg: var(--canvas);
+  --dashboard-raised: var(--raised);
+  --customer-raised: var(--raised);
+  --support-raised: var(--raised);
+  --revenue-raised: var(--raised);
+  --dashboard-raised-sm: var(--raised-small);
+  --customer-raised-sm: var(--raised-small);
+  --support-raised-sm: var(--raised-small);
+  --revenue-raised-sm: var(--raised-small);
+  --dashboard-inset: var(--pressed);
+  --customer-inset: var(--pressed);
+  --support-inset: var(--pressed);
+  --revenue-inset: var(--pressed);
+  background: linear-gradient(135deg, #e2ebf7, #eef3f9 48%, #e3ebf6);
+  color: var(--text);
+  font-family: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.washwiz-theme :is(button, input, select, textarea, th, .eyebrow, .machine-id, .badge, .order-id-panel strong) {
+  font-family: inherit;
+  letter-spacing: 0;
+}
+body.washwiz-theme :is(h1, h2, h3, p, span, strong, b, small) { letter-spacing: 0; }
+body.washwiz-theme :is(h2, h3) { color: var(--text); line-height: 1.25; overflow-wrap: anywhere; }
+body.washwiz-theme h2 { font-size: 30px; }
+body.washwiz-theme h3 { font-size: 20px; }
+body.washwiz-theme .eyebrow { color: var(--subtle); font-size: 11px; font-weight: 700; }
+body.washwiz-theme label { color: var(--muted); font-size: 13px; font-weight: 600; }
+body.washwiz-theme small { color: var(--subtle); }
+body.washwiz-theme :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #ffffff66;
+  border-radius: var(--control-radius);
+  background: var(--surface-muted);
+  box-shadow: var(--pressed);
+  color: var(--text);
+  font-size: 13px;
+}
+body.washwiz-theme input::placeholder { color: var(--subtle); opacity: 1; }
+body.washwiz-theme :is(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+body.washwiz-theme .clay { background: var(--canvas); border-color: #ffffff99; box-shadow: var(--raised); }
+body.washwiz-theme :is(.primary-btn, .secondary-btn, .select-btn) { min-height: 42px; border-radius: var(--control-radius); font-size: 13px; font-weight: 700; }
+body.washwiz-theme .primary-btn { background: var(--primary); color: #fff; box-shadow: 0 5px 12px #2563eb33; }
+body.washwiz-theme .primary-btn:hover { background: var(--primary-hover); }
+body.washwiz-theme .secondary-btn { background: var(--canvas); color: var(--muted); border-color: #ffffff80; box-shadow: var(--raised-small); }
+body.washwiz-theme .secondary-btn:hover { color: var(--primary); background: var(--primary-soft); }
+body.washwiz-theme :is(.primary-btn, .select-btn):disabled { background: var(--surface-strong); color: var(--subtle); box-shadow: none; }
+body.washwiz-theme .logout-btn { color: var(--danger); }
+body.washwiz-theme :is(.tabs, .segmented, .customer-tabs) { background: var(--surface-muted); border: 0; padding: 6px; box-shadow: var(--pressed); border-radius: 16px; }
+body.washwiz-theme :is(.tabs, .segmented, .customer-tabs) button { border-radius: 11px; color: var(--muted); font-size: 12px; font-weight: 600; }
+body.washwiz-theme :is(.tabs, .segmented, .customer-tabs) button.active { background: var(--canvas); color: var(--primary); box-shadow: var(--raised-small); }
+
+/* One shell and control size across all five facility routes. */
+body.washwiz-theme #app { max-width: 1760px; grid-template-columns: 256px minmax(0, 1fr); gap: 24px; padding: 24px; }
+body.washwiz-theme #app .sidebar { top: 24px; height: calc(100dvh - 48px); min-height: 620px; padding: 24px; row-gap: 24px; background: var(--canvas); border: 1px solid #ffffff99; border-radius: var(--panel-radius); box-shadow: var(--raised); }
+body.washwiz-theme #app .sidebar .logo-image { background: var(--canvas); box-shadow: var(--raised-small); }
+body.washwiz-theme #app .sidebar .nav-book { min-height: 46px; background: var(--canvas); color: var(--primary); border: 0; border-radius: var(--control-radius); box-shadow: var(--raised-small); font-size: 13px; }
+body.washwiz-theme #app .sidebar .nav-link { min-height: 46px; border-radius: var(--control-radius); color: var(--muted); font-size: 14px; font-weight: 500; }
+body.washwiz-theme #app .sidebar .nav-link.active { color: var(--primary); background: var(--surface-muted); box-shadow: var(--pressed); font-weight: 700; }
+body.washwiz-theme #app .sidebar #supportBadge { background: var(--primary); color: #fff; }
+body.washwiz-theme #app .sidebar :is(.bookings-hub, .customers-station, .support-station, .revenue-station, .dashboard-facility) { grid-column: 1 / -1; width: 100%; min-width: 0; min-height: 76px; align-self: end; margin-top: auto; padding: 14px; border: 0; border-radius: 16px; background: var(--canvas); box-shadow: var(--raised-small); }
+body.washwiz-theme #app .topbar { min-height: 60px; margin-bottom: 26px; }
+body.washwiz-theme #app .topbar h2 { color: var(--text); font-size: 30px; }
+body.washwiz-theme #app .top-actions { gap: 14px; }
+body.washwiz-theme #app .topbar :is(.icon-btn, .avatar, .logout-btn) { height: 42px; min-height: 42px; border: 0; border-radius: var(--control-radius); background: var(--canvas); box-shadow: var(--raised-small); }
+body.washwiz-theme #app .topbar :is(.icon-btn, .avatar) { width: 42px; }
+body.washwiz-theme #app .topbar .avatar { padding: 0; overflow: hidden; color: #fff; background: var(--text); font-size: 12px; }
+body.washwiz-theme #app .topbar .avatar .facility-profile-photo { width: 100%; height: 100%; }
+body.washwiz-theme #app .topbar .logout-btn { color: var(--danger); padding: 0 16px; font-size: 12px; }
+body.washwiz-theme #app .topbar .logout-btn .dashboard-icon { width: 16px; height: 16px; flex-basis: 16px; }
+
+/* Shared surfaces, including booking steps that are available on every facility page. */
+body.washwiz-theme #app :is(.metric, .machine-card, .summary, .supply-item, .chart-card, .confirm-card, .bookings-register, .customers-register, .revenue-register, .support-inbox, .support-chat) {
+  background: var(--canvas);
+  border: 1px solid #ffffff80;
+  border-radius: var(--panel-radius);
+  box-shadow: var(--raised);
+}
+body.washwiz-theme #app .metric::before { content: none; }
+body.washwiz-theme #app .metric { padding: 20px; min-height: 148px; }
+body.washwiz-theme #app .metric b { color: var(--text); font-size: 30px; line-height: 1.2; }
+body.washwiz-theme #app .metric > span { color: var(--subtle); font-size: 11px; }
+body.washwiz-theme #app .metric p { font-size: 12px; }
+body.washwiz-theme #app :is(.machine-card, .summary, .supply-item) { padding: 20px; }
+body.washwiz-theme #app .machine-card { min-width: 0; }
+body.washwiz-theme #app .machine-top { flex-wrap: wrap; gap: 8px; }
+body.washwiz-theme #app .machine-id { color: var(--text); font-size: 18px; }
+body.washwiz-theme #app .select-btn { background: var(--canvas); color: var(--primary); box-shadow: var(--raised-small); }
+body.washwiz-theme #app .select-btn:disabled { color: var(--subtle); box-shadow: var(--pressed); }
+body.washwiz-theme #app :is(.section-head h3, .summary h3) { color: var(--text); font-size: 20px; }
+body.washwiz-theme #app :is(.badge, .status-pill, .booking-status) { font-family: inherit; font-size: 10px; font-weight: 700; }
+body.washwiz-theme #app :is(.badge.available, .status-pill.success, .booking-status.completed) { color: var(--success); background: var(--success-soft); }
+body.washwiz-theme #app :is(.badge.occupied, .booking-status.in-cycle) { color: var(--danger); background: var(--danger-soft); }
+body.washwiz-theme #app :is(.badge.maintenance, .status-pill.warning, .booking-status.drying) { color: var(--warning); background: var(--warning-soft); }
+body.washwiz-theme #app :is(.booking-action, .customer-action, .customer-button, .revenue-actions .secondary-btn, .transactions-head .secondary-btn) { min-height: 36px; border-radius: 12px; background: var(--canvas); box-shadow: var(--raised-small); color: var(--muted); font-size: 12px; }
+body.washwiz-theme #app :is(.booking-action, .customer-action, .customer-button):hover { color: var(--primary); }
+body.washwiz-theme #app :is(.bookings-toolbar, .customers-toolbar, .revenue-toolbar) { margin-bottom: 24px; }
+body.washwiz-theme #app .customers-toolbar { padding: 20px; border-radius: var(--panel-radius); box-shadow: var(--raised); }
+body.washwiz-theme #app :is(.bookings-filters button, .booking-pagination button, .customer-pagination button) { font-size: 12px; }
+body.washwiz-theme #app :is(.bookings-search input, .customers-search input, .support-inbox input) { font-size: 13px; }
+
+/* The ledger follows the same header, spacing and separators as the bookings table. */
+body.washwiz-theme #app :is(.bookings-register, .customers-register, .revenue-register) { padding: 26px; }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) { width: 100%; min-width: 760px; border-collapse: collapse; }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) th { padding: 0 16px 18px; background: transparent; color: var(--subtle); border-bottom: 1px solid var(--line); font: 700 11px/1.5 "Hanken Grotesk", system-ui, sans-serif; letter-spacing: 0; text-align: left; }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) td { padding: 22px 16px; color: var(--muted); font-size: 13px; font-weight: 500; border-bottom: 1px solid var(--line); }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) :is(th, td):last-child { text-align: right; }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) tbody tr { background: transparent; }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) tbody tr:hover { background: #ffffff40; }
+body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) tbody tr:last-child td { border-bottom: 0; }
+body.washwiz-theme #app :is(.customer-cell strong, .booking-customer strong) { color: var(--text); font-size: 13px; }
+body.washwiz-theme #app :is(.customer-cell small, .booking-customer small, .revenue-register td small) { color: var(--subtle); font-size: 12px; }
+body.washwiz-theme #app :is(.bookings-footer p, .customers-footer p) { color: var(--muted); font-size: 12px; }
+body.washwiz-theme #app .chart-card .section-head { flex-direction: row; align-items: center; }
+body.washwiz-theme #app :is(.support-order-strip, .support-messages) { background: var(--surface-muted); box-shadow: var(--pressed); }
+body.washwiz-theme #app .support-order-strip { border-radius: 16px; }
+body.washwiz-theme #app .support-message p { font-size: 13px; overflow-wrap: anywhere; }
+body.washwiz-theme #app .support-thread-main strong { font-size: 13px; }
+body.washwiz-theme #app .support-thread-main em { font-size: 12px; }
+body.washwiz-theme #app .support-thread { grid-template-columns: 40px minmax(0, 1fr); }
+body.washwiz-theme #app .support-avatar { width: 40px; height: 40px; }
+body.washwiz-theme #app .support-thread-meta { grid-column: 2; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+body.washwiz-theme :is(.dashboard-dialog, .customer-access-card, .auth-card) { background: var(--canvas); border: 1px solid #ffffffb3; border-radius: var(--panel-radius); box-shadow: 0 20px 60px #10284d33; }
+body.washwiz-theme .dashboard-dialog .icon-btn { background: var(--canvas); box-shadow: var(--raised-small); }
+
+/* Customer entry and order tools share the facility colors, type and controls. */
+body.washwiz-theme .auth-brand { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 24px; }
+body.washwiz-theme .auth-brand img { width: 64px; height: 64px; object-fit: contain; }
+body.washwiz-theme .portal-brand { text-align: left; }
+body.washwiz-theme .portal-brand strong { color: var(--text); font-size: 24px; font-weight: 800; }
+body.washwiz-theme .portal-brand small { font-size: 12px; }
+body.washwiz-theme .customer-page-shell { max-width: 900px; padding: 28px 24px; }
+body.washwiz-theme .customer-hero { grid-template-columns: 64px 1fr auto; justify-items: start; align-items: center; gap: 14px; margin-bottom: 28px; }
+body.washwiz-theme .customer-home-link { position: static; grid-column: 3; grid-row: 1; }
+body.washwiz-theme .customer-page-logo { grid-column: 1; grid-row: 1; width: 64px; height: 64px; filter: none; }
+body.washwiz-theme .customer-hero .portal-brand { grid-column: 2; grid-row: 1; }
+body.washwiz-theme .customer-action-row { grid-column: 1 / -1; width: 100%; display: grid; grid-template-columns: 1fr 1fr; padding: 6px; gap: 6px; border-radius: 16px; background: var(--surface-muted); box-shadow: var(--pressed); }
+body.washwiz-theme .customer-action-row button { background: transparent; color: var(--muted); box-shadow: none; border: 0; }
+body.washwiz-theme .customer-action-row button.active { background: var(--canvas); color: var(--primary); box-shadow: var(--raised-small); }
+body.washwiz-theme .customer-section-stage { width: 100%; }
+body.washwiz-theme :is(.customer-tool-card, .order-card) { padding: 28px; border-radius: var(--panel-radius); }
+body.washwiz-theme .portal-intro { font-size: 14px; }
+body.washwiz-theme .customer-page-form { grid-template-columns: 1fr 1fr; gap: 20px; }
+body.washwiz-theme .customer-page-form :is(p, button) { grid-column: 1 / -1; }
+body.washwiz-theme .customer-portal { max-width: 1120px; padding: 28px 24px; margin-inline: auto; }
+body.washwiz-theme .session-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+body.washwiz-theme .session-brand img { width: 56px; height: 56px; object-fit: contain; }
+body.washwiz-theme .portal-actions { position: static; margin-bottom: 24px; justify-content: space-between; }
+body.washwiz-theme .customer-order-page { margin-top: 0; }
+body.washwiz-theme .customer-order-header { background: transparent; padding: 0 0 22px; border: 0; border-radius: 0; box-shadow: none; }
+body.washwiz-theme .order-id-panel { min-width: 0; background: transparent; box-shadow: none; padding: 0; }
+body.washwiz-theme .order-id-panel strong { font-size: 16px; overflow-wrap: anywhere; }
+body.washwiz-theme .detail-item { min-width: 0; border-radius: 0; background: transparent; padding: 16px 0; border-bottom: 1px solid var(--line); }
+body.washwiz-theme .detail-item strong { overflow-wrap: anywhere; }
+body.washwiz-theme .status-summary div { border-radius: 0; background: transparent; border-top: 1px solid var(--line); }
+body.washwiz-theme .chat-messages { background: var(--surface-muted); box-shadow: var(--pressed); border-radius: 16px; }
+body.washwiz-theme .chat-message p { overflow-wrap: anywhere; }
+
+@media (max-width: 1199px) {
+  body.washwiz-theme #app .topbar { flex-wrap: wrap; }
+}
+@media (max-width: 980px) {
+  body.washwiz-theme #app { grid-template-columns: minmax(0, 1fr); }
+  body.washwiz-theme #app .sidebar { top: 14px; width: min(288px, calc(100vw - 28px)); height: calc(100dvh - 28px); min-height: 0; }
+  body.washwiz-theme #app .sidebar:not(.open) { visibility: hidden; pointer-events: none; }
+}
+@media (max-width: 680px) {
+  body.washwiz-theme #app { padding: 20px 16px; }
+  body.washwiz-theme #app .topbar h2, body.washwiz-theme h2 { font-size: 24px; }
+  body.washwiz-theme #app .top-actions { gap: 12px; }
+  body.washwiz-theme #app .metric b { font-size: 24px; }
+  body.washwiz-theme #app :is(.bookings-register, .customers-register, .revenue-register) { padding: 20px 16px; }
+  body.washwiz-theme #app .revenue-table-scroll { overflow-x: auto; }
+  body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) thead { display: table-header-group; }
+  body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) tbody { display: table-row-group; }
+  body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) tr { display: table-row; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+  body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) td { display: table-cell; text-align: left; }
+  body.washwiz-theme #app :is(.bookings-table, .customers-table, .revenue-register table) td::before { content: none; }
+  body.washwiz-theme .customer-page-shell, body.washwiz-theme .customer-portal { padding: 20px 16px; }
+  body.washwiz-theme .customer-hero { grid-template-columns: 48px minmax(0, 1fr); }
+  body.washwiz-theme .customer-page-logo { width: 48px; height: 48px; }
+  body.washwiz-theme .customer-home-link { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
+  body.washwiz-theme .customer-action-row { grid-row: 3; }
+  body.washwiz-theme .customer-page-form { grid-template-columns: 1fr; }
+  body.washwiz-theme :is(.customer-tool-card, .order-card) { padding: 22px 18px; }
+  body.washwiz-theme .customer-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; overflow: visible; }
+  body.washwiz-theme .customer-tabs button { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.washwiz-theme :is(button, a) { transition: none; }
+}
