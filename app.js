@@ -384,6 +384,20 @@ function machineCard(machine, selectable = false) {
     maintenance: ["triangle-alert", "Maintenance", "Under service"]
   };
   const [statusIcon, statusTitle, statusNote] = statusDetails[machine.status];
+  const dashboardControls = dashboardCard ? `
+      <div class="dashboard-quick-status" aria-label="Quick status for ${machine.id}">
+        <div class="dashboard-quick-status-head"><span>Quick status</span><small>Tap to set</small></div>
+        <div class="dashboard-status-options" role="group" aria-label="Set ${machine.id} status">
+          <button type="button" class="${machine.status === "available" ? "active available" : ""}" data-machine-status="available" data-machine-id="${machine.id}">Avail</button>
+          <button type="button" class="${machine.status === "occupied" ? "active occupied" : ""}" data-machine-status="occupied" data-machine-id="${machine.id}">In Use</button>
+          <button type="button" class="${machine.status === "maintenance" ? "active maintenance" : ""}" data-machine-status="maintenance" data-machine-id="${machine.id}">Service</button>
+        </div>
+      </div>` : "";
+  const dashboardActions = dashboardCard ? `
+        <span class="dashboard-machine-actions">
+          <button type="button" data-edit-machine="${machine.id}" aria-label="Edit ${machine.id}" title="Edit machine"><span aria-hidden="true">&#9998;</span></button>
+          <button type="button" data-delete-machine="${machine.id}" aria-label="Remove ${machine.id}" title="Remove machine"><span aria-hidden="true">&#128465;</span></button>
+        </span>` : "";
   return `
     <article class="machine-card clay ${machine.status} ${selected ? "selected" : ""}" ${dashboardCard ? `data-dashboard-machine-id="${machine.id}" tabindex="-1"` : ""}>
       <div class="machine-top">
@@ -394,7 +408,8 @@ function machineCard(machine, selectable = false) {
         <span class="machine-state-icon">${dashboardIcon(statusIcon)}</span>
         <span class="machine-state-copy"><strong>${statusTitle}</strong><small>${statusNote}</small></span>
       </div>` : '<div class="machine-visual"></div>'}
-      <p><strong>${machine.label}</strong><br><span>${machine.load} capacity</span><span>${machine.eta}</span></p>
+      ${dashboardControls}
+      <p><span class="dashboard-machine-details"><strong>${machine.label}</strong><br><span>${machine.load} capacity</span><span>${machine.eta}</span></span>${dashboardActions}</p>
       ${selectable ? `<button class="select-btn" data-machine="${machine.id}" ${disabled ? "disabled" : ""} aria-label="${disabled ? `${machine.id} unavailable` : `Select ${machine.id} for ${money(machine.price)}`}">${disabled ? "Unavailable" : selected ? "Selected" : `Select - ${money(machine.price)}`}</button>` : ""}
     </article>
   `;
@@ -402,7 +417,14 @@ function machineCard(machine, selectable = false) {
 
 function renderMachines(target, filter, selectable) {
   const list = machines.filter(machine => filter === "all" || machine.type === filter || machine.size === filter);
-  byId(target).innerHTML = list.map(machine => machineCard(machine, selectable)).join("");
+  const cards = list.map(machine => machineCard(machine, selectable)).join("");
+  const addCard = target === "dashboardMachines" && !selectable ? `
+    <button class="dashboard-add-machine" type="button" data-add-machine aria-label="Add a new machine">
+      <span class="dashboard-add-machine-icon" aria-hidden="true">+</span>
+      <strong>+ Add New Machine</strong>
+      <small>Register washer or dryer<br>to the floor</small>
+    </button>` : "";
+  byId(target).innerHTML = cards + addCard;
 }
 
 function renderMetrics() {
