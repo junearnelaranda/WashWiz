@@ -26,6 +26,6 @@ const sectionObserver = new IntersectionObserver(entries => {
 navSections.forEach(section => sectionObserver.observe(section));
 document.querySelector('.contact form')?.addEventListener('submit', event => {
   event.preventDefault();
-  event.currentTarget.querySelector('output').textContent = 'Thanks — your message is ready for the WashWiz team.';
+  event.currentTarget.querySelector('output').textContent = 'Thanks! Your message is ready to be sent to the WashWiz team.';
   event.currentTarget.reset();
 });

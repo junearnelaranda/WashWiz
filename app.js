@@ -722,11 +722,21 @@ loadSupportThreads();
 renderAll();
 setRoute(state.route);
 const hasActiveFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true";
+const shouldDelayForLandingLoader = new URLSearchParams(location.search).get("loader") === "washer";
+const finishInitialLoad = callback => {
+  if (shouldDelayForLandingLoader) {
+    window.setTimeout(callback, 780);
+    return;
+  }
+  callback();
+};
 if (hasActiveFacilitySession) {
   byId("auth").classList.add("hidden");
   sessionStorage.removeItem(facilityRouteLoadingKey);
-  byId("app").classList.remove("hidden");
-  finishLoading();
+  finishInitialLoad(() => {
+    byId("app").classList.remove("hidden");
+    finishLoading();
+  });
 } else {
-  finishLoading();
+  finishInitialLoad(finishLoading);
 }

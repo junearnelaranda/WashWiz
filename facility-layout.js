@@ -2,8 +2,9 @@
 
 const requestedFacilityPage = document.body.dataset.page || "dashboard";
 const hasFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true";
-const initialFacilityLoader = "none";
-const initialFacilityLoaderClass = "is-done";
+const useLandingWasherLoader = new URLSearchParams(location.search).get("loader") === "washer";
+const initialFacilityLoader = useLandingWasherLoader ? "washer" : "none";
+const initialFacilityLoaderClass = useLandingWasherLoader ? "is-washer" : "is-done";
 
 function dashboardIcon(name) {
   return `<span class="dashboard-icon icon-${name}" aria-hidden="true"></span>`;
@@ -18,10 +19,6 @@ if (requestedFacilityPage !== "dashboard" && !hasFacilitySession) {
 
 const facilityPageMarkup = `
 <div id="loadingScreen" class="loading-screen ${initialFacilityLoaderClass}" data-initial-loader="${initialFacilityLoader}" role="status" aria-live="polite" aria-label="Loading screen">
-      <span class="intro-white-wipe" aria-hidden="true"></span>
-      <div class="loading-title-card">
-        <img class="intro-title-image" src="intro.png" alt="The Lord Of The Rinse. A Smart Laundry System.">
-      </div>
       <img class="splash-logo" src="logo-transparent.png" alt="WashWiz wizard washing machine logo">
       <div class="splash-brand">
         <strong>WashWiz.</strong>
