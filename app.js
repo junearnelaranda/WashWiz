@@ -724,18 +724,9 @@ setRoute(state.route);
 const hasActiveFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true";
 if (hasActiveFacilitySession) {
   byId("auth").classList.add("hidden");
-  const initialLoader = byId("loadingScreen")?.dataset.initialLoader;
   sessionStorage.removeItem(facilityRouteLoadingKey);
-  window.setTimeout(() => {
-    byId("app").classList.remove("hidden");
-    finishLoading();
-  }, initialLoader === "route" ? 760 : 520);
+  byId("app").classList.remove("hidden");
+  finishLoading();
 } else {
-  window.setTimeout(() => {
-    const loadingScreen = byId("loadingScreen");
-    if (!loadingScreen) return;
-    loadingScreen.classList.remove("is-title");
-    loadingScreen.classList.add("is-black");
-  }, 1300);
-  window.setTimeout(finishLoading, 3200);
+  finishLoading();
 }

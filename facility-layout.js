@@ -2,9 +2,8 @@
 
 const requestedFacilityPage = document.body.dataset.page || "dashboard";
 const hasFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true";
-const hasPendingFacilityRoute = hasFacilitySession && sessionStorage.getItem("washwizFacilityRouteLoading") === "true";
-const initialFacilityLoader = !hasFacilitySession ? "intro" : hasPendingFacilityRoute || requestedFacilityPage !== "dashboard" ? "route" : "skeleton";
-const initialFacilityLoaderClass = initialFacilityLoader === "intro" ? "is-title" : initialFacilityLoader === "route" ? "is-washer" : "is-skeleton";
+const initialFacilityLoader = "none";
+const initialFacilityLoaderClass = "is-done";
 
 function dashboardIcon(name) {
   return `<span class="dashboard-icon icon-${name}" aria-hidden="true"></span>`;
