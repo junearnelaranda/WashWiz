@@ -23,7 +23,7 @@ const facilityPageMarkup = `
       <div class="loading-title-card">
         <img class="intro-title-image" src="intro.png" alt="The Lord Of The Rinse. A Smart Laundry System.">
       </div>
-      <img class="splash-logo" src="logo.png" alt="WashWiz wizard washing machine logo">
+      <img class="splash-logo" src="logo-transparent.png" alt="WashWiz wizard washing machine logo">
       <div class="splash-brand">
         <strong>WashWiz.</strong>
         <span>Smart laundry operations for bookings, supplies, and shop performance.</span>
@@ -82,7 +82,7 @@ const facilityPageMarkup = `
 
     <div id="auth" class="auth-screen">
       <section class="auth-card clay">
-        <div class="auth-brand"><img src="logo.png" alt="WashWiz logo"><div class="portal-brand"><strong>WashWiz</strong></div></div>
+        <div class="auth-brand"><img src="logo-transparent.png" alt="WashWiz logo"><div class="portal-brand"><strong>WashWiz</strong></div></div>
         <div class="tabs" role="tablist" aria-label="Authentication">
           <button class="tab active" data-auth-tab="login">Login</button>
           <button class="tab" data-auth-tab="register">Register</button>
@@ -106,7 +106,7 @@ const facilityPageMarkup = `
     </div>
     <div id="app" class="app-shell hidden">
       <aside class="sidebar clay">
-        <div class="logo-mark logo-image"><img src="logo.png" alt="WashWiz logo"></div>
+        <div class="logo-mark logo-image"><img src="logo-transparent.png" alt="WashWiz logo"></div>
         <div>
           <strong>WashWiz</strong>
         </div>
