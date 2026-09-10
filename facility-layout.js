@@ -108,7 +108,7 @@ const facilityPageMarkup = `
         </div>
           <button class="primary-btn nav-book" data-route="machines">${hasNeumorphicFacilityTheme ? dashboardIcon("plus") : '<span aria-hidden="true">+</span>'} New Booking</button>
           <nav>
-          <a class="nav-link active" href="index.html" data-page-link="dashboard" aria-current="page">${dashboardNavIcon("layout-dashboard")}Dashboard</a>
+          <a class="nav-link active" href="dashboard.html" data-page-link="dashboard" aria-current="page">${dashboardNavIcon("layout-dashboard")}Dashboard</a>
           <a class="nav-link" href="bookings.html" data-page-link="bookings">${dashboardNavIcon("calendar-days")}Bookings</a>
           <a class="nav-link" href="details.html" data-page-link="customers">${dashboardNavIcon("users")}Customers</a>
           <a class="nav-link" href="revenue.html" data-page-link="revenue">${dashboardNavIcon("dollar-sign")}Revenue</a>
@@ -227,7 +227,7 @@ const facilityPageMarkup = `
             <p id="confirmDetails"></p>
             <div class="confirm-actions">
               <button class="primary-btn" data-route="machines">New Booking</button>
-              <a class="secondary-btn" href="index.html">Back to Dashboard</a>
+              <a class="secondary-btn" href="dashboard.html">Back to Dashboard</a>
             </div>
           </div>
         </section>

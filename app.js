@@ -110,9 +110,9 @@ const supportThreads = [
 
 const supportStorageKey = "washwizSupportThreads";
 const facilityRouteLoadingKey = "washwizFacilityRouteLoading";
-const facilityPageFiles = new Set(["index.html", "bookings.html", "details.html", "revenue.html", "support.html", "settings.html"]);
+const facilityPageFiles = new Set(["dashboard.html", "bookings.html", "details.html", "revenue.html", "support.html", "settings.html"]);
 const facilityPageRoutes = {
-  "index.html": "dashboard",
+  "dashboard.html": "dashboard",
   "bookings.html": "bookings",
   "details.html": "customers",
   "revenue.html": "revenue",
