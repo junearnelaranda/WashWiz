@@ -1,4 +1,6 @@
-const sessionOrder = {
+const customerBookingStorageKey = "washwizCustomerBookings";
+
+const defaultSessionOrder = {
   id: "LW7K4M9Q2X8R6P3",
   customer: "Juan Dela Cruz",
   date: "August 25, 2026",
@@ -19,9 +21,50 @@ const sessionOrder = {
   ]
 };
 
+function storedSessionOrder() {
+  const orderId = requestedOrderId().toUpperCase();
+  try {
+    const bookings = JSON.parse(localStorage.getItem(customerBookingStorageKey) || "[]");
+    const booking = Array.isArray(bookings) ? bookings.find(item => item.id?.toUpperCase() === orderId) : null;
+    if (!booking) return null;
+    const scheduledDate = new Intl.DateTimeFormat("en-PH", { month: "long", day: "numeric", year: "numeric" })
+      .format(new Date(`${booking.date}T00:00:00`));
+    const createdDate = new Intl.DateTimeFormat("en-PH", { month: "long", day: "numeric", year: "numeric" })
+      .format(new Date(booking.createdAt || Date.now()));
+    return {
+      id: booking.id,
+      customer: booking.customer,
+      date: createdDate,
+      service: booking.service,
+      quantity: "1 standard load",
+      total: `PHP ${Number(booking.total).toLocaleString("en-PH")}`,
+      totalValue: Number(booking.total),
+      expectedCompletion: `${scheduledDate} at ${booking.time}`,
+      status: booking.status || "Requested",
+      facility: booking.facility || "Bluewater Laundry",
+      machine: booking.machine || "Unassigned",
+      notes: booking.notes || "None",
+      paymentHistory: [],
+      tracking: [
+        { label: "Booking Requested", state: "current" },
+        { label: "Confirmed", state: "upcoming" },
+        { label: "Dropped Off", state: "upcoming" },
+        { label: "In Service", state: "upcoming" },
+        { label: "Ready", state: "upcoming" }
+      ]
+    };
+  } catch {
+    return null;
+  }
+}
+
+const sessionOrder = storedSessionOrder() || defaultSessionOrder;
+
 const sessionState = {
   customerTab: "overview",
-  chatMessages: [
+  chatMessages: sessionOrder.totalValue ? [
+    { sender: "Admin", body: "Your booking request has been received. We will confirm your drop-off schedule shortly." }
+  ] : [
     { sender: "Admin", body: "Hello Juan! Your order is now being processed." },
     { sender: "Customer", body: "Thank you. When will it be ready?" },
     { sender: "Admin", body: "Expected completion is August 30." }
@@ -37,17 +80,26 @@ function requestedOrderId() {
 
 function renderSessionOrder() {
   const orderId = requestedOrderId().toUpperCase();
+  const isRequestedBooking = Boolean(sessionOrder.totalValue);
   sessionById("sessionOrderId").textContent = orderId;
   sessionById("chatOrderLabel").textContent = `Regarding Order ${orderId}`;
+  sessionById("orderStatusBadge").textContent = isRequestedBooking ? "Verified Booking" : "Verified Order";
+  sessionById("overviewStatus").textContent = sessionOrder.status;
+  sessionById("trackingStatusText").textContent = isRequestedBooking
+    ? "Your request is waiting for facility confirmation."
+    : "Your order is currently being processed.";
+  sessionById("trackingUpdated").textContent = isRequestedBooking ? "Just now" : "August 25, 2026 - 8:30 PM";
 
   sessionById("orderDetailsGrid").innerHTML = [
     ["Order ID", orderId],
     ["Customer", sessionOrder.customer],
     ["Order Date", sessionOrder.date],
+    ...(isRequestedBooking ? [["Laundry Shop", sessionOrder.facility]] : []),
     ["Service", sessionOrder.service],
     ["Quantity", sessionOrder.quantity],
     ["Total", sessionOrder.total],
-    ["Expected Completion", sessionOrder.expectedCompletion]
+    [isRequestedBooking ? "Scheduled Drop-off" : "Expected Completion", sessionOrder.expectedCompletion],
+    ...(isRequestedBooking ? [["Machine", sessionOrder.machine], ["Special Instructions", sessionOrder.notes]] : [])
   ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   sessionById("trackingTimeline").innerHTML = sessionOrder.tracking.map(step => `
@@ -58,12 +110,16 @@ function renderSessionOrder() {
   `).join("");
   sessionById("trackingEmpty").classList.toggle("hidden", sessionOrder.tracking.length > 0);
 
+  const amountPaid = isRequestedBooking ? "PHP 0" : "PHP 2,000.00";
+  const remaining = isRequestedBooking ? sessionOrder.total : "PHP 1,500.00";
   sessionById("paymentSummary").innerHTML = [
-    ["Total Amount", "PHP 3,500.00"],
-    ["Amount Paid", "PHP 2,000.00"],
-    ["Remaining Balance", "PHP 1,500.00"],
-    ["Payment Status", `<span class="status-pill warning">Partially Paid</span>`]
+    ["Total Amount", sessionOrder.total],
+    ["Amount Paid", amountPaid],
+    ["Remaining Balance", remaining],
+    ["Payment Status", `<span class="status-pill warning">${isRequestedBooking ? "Payment Pending" : "Partially Paid"}</span>`]
   ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
+  sessionById("paymentProgressBar").style.width = isRequestedBooking ? "0%" : "57%";
+  sessionById("paymentCaption").textContent = isRequestedBooking ? `PHP 0 / ${sessionOrder.total} paid` : "PHP 2,000 / PHP 3,500 paid";
 
   sessionById("paymentHistory").innerHTML = sessionOrder.paymentHistory.map(payment => `
     <div class="payment-row">
@@ -95,27 +151,30 @@ function persistCustomerSupportMessage(body) {
   } catch {
     storedThreads = [];
   }
-  let thread = storedThreads.find(item => item.id === "juan-order");
+  const threadId = `customer-${orderId.toLowerCase()}`;
+  let thread = storedThreads.find(item => item.orderId === orderId);
   if (!thread) {
     thread = {
-      id: "juan-order",
+      id: threadId,
       customer: sessionOrder.customer,
       orderId,
-      machine: "W-02",
-      machineLabel: "Large Washer",
+      machine: sessionOrder.machine || "Unassigned",
+      machineLabel: sessionOrder.service,
       status: "active",
       urgency: "Live Active",
       lastSeen: "Just now",
       eta: "18 min left",
-      total: 800,
-      paid: true,
-      tag: "Machine W-02",
+      total: sessionOrder.totalValue || 3500,
+      paid: false,
+      tag: sessionOrder.machine && sessionOrder.machine !== "Unassigned" ? `Machine ${sessionOrder.machine}` : "Booking Request",
       preview: body,
-      messages: [
-        { sender: "Admin", body: "Hello Juan! Your order is now being processed.", time: "10:14 AM" },
-        { sender: "Customer", body: "Thank you. When will it be ready?", time: "10:16 AM" },
-        { sender: "Admin", body: "Expected completion is August 30.", time: "10:17 AM" }
-      ]
+      messages: sessionOrder.totalValue
+        ? [{ sender: "Admin", body: "Your booking request has been received. We will confirm your drop-off schedule shortly.", time: now }]
+        : [
+          { sender: "Admin", body: "Hello Juan! Your order is now being processed.", time: "10:14 AM" },
+          { sender: "Customer", body: "Thank you. When will it be ready?", time: "10:16 AM" },
+          { sender: "Admin", body: "Expected completion is August 30.", time: "10:17 AM" }
+        ]
     };
     storedThreads.push(thread);
   }

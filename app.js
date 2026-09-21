@@ -1,3 +1,22 @@
+function loadCustomerBookingRequests() {
+  try {
+    const stored = JSON.parse(localStorage.getItem("washwizCustomerBookings") || "[]");
+    if (!Array.isArray(stored)) return [];
+    return stored.filter(booking => booking && booking.customer && booking.id).map(booking => ({
+      ...booking,
+      machine: booking.machine || "Unassigned",
+      type: booking.service || booking.type || "Laundry service",
+      status: booking.status || "Requested",
+      time: booking.date
+        ? `${new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(`${booking.date}T00:00:00`))}, ${booking.time}`
+        : booking.time,
+      total: Number(booking.total) || 0
+    }));
+  } catch {
+    return [];
+  }
+}
+
 const state = {
   route: document.body.dataset.page || "dashboard",
   selectedMachine: null,
@@ -5,6 +24,7 @@ const state = {
   activeSupportThread: "juan-order",
   supportFilter: "all",
   bookings: [
+    ...loadCustomerBookingRequests(),
     { customer: "Maya Santos", contact: "0917 202 0144", machine: "W-02", type: "Washer", status: "In Cycle", time: "10:20 AM", total: 295 },
     { customer: "Walk-in Customer", contact: "Cash desk", machine: "D-02", type: "Dryer", status: "Drying", time: "10:42 AM", total: 165 },
     { customer: "Noah Reyes", contact: "0998 551 7730", machine: "W-03", type: "Washer", status: "In Cycle", time: "11:05 AM", total: 340 }

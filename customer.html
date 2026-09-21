@@ -17,24 +17,102 @@
         <img class="customer-page-logo" src="logo-transparent.png" alt="WashWiz wizard washing machine logo">
         <div class="portal-brand"><strong>WashWiz</strong></div>
         <div class="customer-action-row">
-          <button class="primary-btn active" type="button" data-customer-section="bookService">Book Now</button>
+          <button class="primary-btn active" type="button" data-customer-section="findShop">Find a Shop</button>
+          <button class="secondary-btn" type="button" data-customer-section="bookService">Book Now</button>
           <button class="secondary-btn" type="button" data-customer-section="verifyOrder">Verify Order</button>
         </div>
       </section>
 
       <section class="customer-section-stage" aria-label="Customer tools">
-        <article id="bookService" class="customer-tool-card customer-section active-customer-section clay">
+        <article id="findShop" class="customer-tool-card customer-section active-customer-section clay">
+          <p class="eyebrow">Laundry near you</p>
+          <h2>Find a Laundry Shop</h2>
+          <p class="portal-intro">Search WashWiz partner shops and check machine availability before you go.</p>
+
+          <label class="shop-search-field">
+            <span class="shop-search-icon" aria-hidden="true"></span>
+            <input id="shopSearch" type="search" placeholder="Search shop, street, or area" autocomplete="off">
+          </label>
+          <div class="shop-results-head">
+            <p id="shopResultsSummary" role="status">3 shops found</p>
+            <span><i class="machine-status-dot available"></i>Live availability</span>
+          </div>
+          <div id="shopResults" class="shop-results"></div>
+        </article>
+
+        <article id="bookService" class="customer-tool-card customer-section clay">
           <p class="eyebrow">New booking</p>
           <h2>Book Laundry Service</h2>
-          <p class="portal-intro">Send your booking request and we will prepare a washer, dryer, and supplies for your visit.</p>
+          <p class="portal-intro">Choose a service and reserve a convenient drop-off time. We will confirm your request before your visit.</p>
 
           <form id="customerBookingForm" class="customer-page-form">
-            <label>Full Name<input id="bookingName" type="text" placeholder="Enter your full name" autocomplete="name" required></label>
-            <label>Contact Number<input id="bookingContact" type="tel" placeholder="0917 555 0123" autocomplete="tel" required></label>
-            <label>Preferred Service<input id="bookingService" type="text" placeholder="Wash, dry, fold, or supplies" required></label>
-            <label>Preferred Time<input id="bookingTime" type="text" placeholder="Today, 3:00 PM" required></label>
+            <section class="selected-booking-shop">
+              <span class="selected-shop-mark" aria-hidden="true">W</span>
+              <div><small>Booking at</small><strong id="selectedBookingShop">Bluewater Laundry</strong><span id="selectedBookingAddress">14 Mabini Street, Poblacion</span></div>
+              <button class="secondary-btn compact" id="changeBookingShop" type="button">Change</button>
+            </section>
+
+            <fieldset class="booking-service-picker">
+              <legend>Choose a service</legend>
+              <label class="booking-service-option">
+                <input type="radio" name="bookingService" value="wash-fold" checked>
+                <span class="booking-service-check" aria-hidden="true"></span>
+                <span><strong>Wash &amp; Fold</strong><small>Freshly washed and neatly folded</small></span>
+                <b>PHP 199</b>
+              </label>
+              <label class="booking-service-option">
+                <input type="radio" name="bookingService" value="wash-dry-fold">
+                <span class="booking-service-check" aria-hidden="true"></span>
+                <span><strong>Wash, Dry &amp; Fold</strong><small>Complete care for one standard load</small></span>
+                <b>PHP 299</b>
+              </label>
+              <label class="booking-service-option">
+                <input type="radio" name="bookingService" value="express">
+                <span class="booking-service-check" aria-hidden="true"></span>
+                <span><strong>Express Service</strong><small>Priority turnaround in about 3 hours</small></span>
+                <b>PHP 399</b>
+              </label>
+            </fieldset>
+
+            <div class="booking-contact-grid">
+              <label>Full Name<input id="bookingName" type="text" placeholder="Enter your full name" autocomplete="name" required></label>
+              <label>Contact Number<input id="bookingContact" type="tel" placeholder="0917 555 0123" autocomplete="tel" inputmode="tel" required></label>
+              <label>Drop-off Date<input id="bookingDate" type="date" required></label>
+              <label>Drop-off Time
+                <select id="bookingTime" required>
+                  <option value="">Select a time</option>
+                  <option>8:00 AM</option>
+                  <option>10:00 AM</option>
+                  <option>12:00 PM</option>
+                  <option>2:00 PM</option>
+                  <option>4:00 PM</option>
+                  <option>6:00 PM</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="booking-notes">Special instructions <span>(optional)</span><textarea id="bookingNotes" rows="3" maxlength="240" placeholder="Detergent preference, fabric care, or other notes"></textarea></label>
+
+            <aside class="customer-booking-summary" aria-live="polite">
+              <div><span>Laundry shop</span><strong id="bookingSummaryShop">Bluewater Laundry</strong></div>
+              <div><span>Selected service</span><strong id="bookingSummaryService">Wash &amp; Fold</strong></div>
+              <div><span>Drop-off</span><strong id="bookingSummarySchedule">Choose a date and time</strong></div>
+              <div class="booking-summary-total"><span>Estimated total</span><strong id="bookingSummaryTotal">PHP 199</strong></div>
+              <small>Final price may vary for oversized loads or added supplies.</small>
+            </aside>
+
             <p id="bookingMessage" class="verification-message" aria-live="polite"></p>
-            <button class="primary-btn" type="submit">Book Service</button>
+            <button class="primary-btn customer-booking-submit" type="submit">Request Booking</button>
+
+            <section id="bookingConfirmation" class="booking-confirmation hidden" aria-live="polite">
+              <span class="booking-confirmation-mark" aria-hidden="true">&#10003;</span>
+              <div>
+                <p>Booking request received</p>
+                <strong id="bookingConfirmationId"></strong>
+                <small>Save this reference. You can use it with your full name under Verify Order.</small>
+              </div>
+              <button class="secondary-btn compact" type="button" id="verifyNewBooking">Verify booking</button>
+            </section>
           </form>
         </article>
 

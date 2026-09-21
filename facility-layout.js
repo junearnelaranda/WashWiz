@@ -241,6 +241,7 @@ const facilityPageMarkup = `
             </label>
             <div class="bookings-filters" role="group" aria-label="Booking status">
               <button type="button" class="active" data-booking-status="all" aria-pressed="true">All <span data-booking-count="all">(0)</span></button>
+              <button type="button" data-booking-status="Requested" aria-pressed="false">Requested <span data-booking-count="Requested">(0)</span></button>
               <button type="button" data-booking-status="In Cycle" aria-pressed="false">In Cycle <span data-booking-count="In Cycle">(0)</span></button>
               <button type="button" data-booking-status="Drying" aria-pressed="false">Drying <span data-booking-count="Drying">(0)</span></button>
               <button type="button" data-booking-status="Completed" aria-pressed="false">Completed <span data-booking-count="Completed">(0)</span></button>

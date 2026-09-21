@@ -135,6 +135,7 @@ body.washwiz-theme #app :is(.badge, .status-pill, .booking-status) { font-family
 body.washwiz-theme #app :is(.badge.available, .status-pill.success, .booking-status.completed) { color: var(--success); background: var(--success-soft); }
 body.washwiz-theme #app :is(.badge.occupied, .booking-status.in-cycle) { color: var(--danger); background: var(--danger-soft); }
 body.washwiz-theme #app :is(.badge.maintenance, .status-pill.warning, .booking-status.drying) { color: var(--warning); background: var(--warning-soft); }
+body.washwiz-theme #app .booking-status.requested { color: var(--primary); background: var(--primary-soft); }
 body.washwiz-theme #app :is(.booking-action, .customer-action, .customer-button, .revenue-actions .secondary-btn, .transactions-head .secondary-btn) { min-height: 36px; border-radius: 12px; background: var(--canvas); box-shadow: var(--raised-small); color: var(--muted); font-size: 12px; }
 body.washwiz-theme #app :is(.booking-action, .customer-action, .customer-button):hover { color: var(--primary); }
 body.washwiz-theme #app :is(.bookings-toolbar, .customers-toolbar, .revenue-toolbar) { margin-bottom: 24px; }
@@ -177,7 +178,7 @@ body.washwiz-theme .customer-hero { grid-template-columns: 64px 1fr auto; justif
 body.washwiz-theme .customer-home-link { position: static; grid-column: 3; grid-row: 1; }
 body.washwiz-theme .customer-page-logo { grid-column: 1; grid-row: 1; width: 64px; height: 64px; filter: none; }
 body.washwiz-theme .customer-hero .portal-brand { grid-column: 2; grid-row: 1; }
-body.washwiz-theme .customer-action-row { grid-column: 1 / -1; width: 100%; display: grid; grid-template-columns: 1fr 1fr; padding: 6px; gap: 6px; border-radius: 16px; background: var(--surface-muted); box-shadow: var(--pressed); }
+body.washwiz-theme .customer-action-row { grid-column: 1 / -1; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 6px; gap: 6px; border-radius: 16px; background: var(--surface-muted); box-shadow: var(--pressed); }
 body.washwiz-theme .customer-action-row button { background: transparent; color: var(--muted); box-shadow: none; border: 0; }
 body.washwiz-theme .customer-action-row button.active { background: var(--canvas); color: var(--primary); box-shadow: var(--raised-small); }
 body.washwiz-theme .customer-section-stage { width: 100%; }
@@ -225,6 +226,13 @@ body.washwiz-theme .chat-message p { overflow-wrap: anywhere; }
   body.washwiz-theme .customer-home-link { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
   body.washwiz-theme .customer-action-row { grid-row: 3; }
   body.washwiz-theme .customer-page-form { grid-template-columns: 1fr; }
+  body.washwiz-theme .booking-service-picker { grid-template-columns: 1fr; }
+  body.washwiz-theme .booking-service-option { min-height: 0; }
+  body.washwiz-theme .booking-contact-grid { grid-template-columns: 1fr; }
+  body.washwiz-theme .booking-confirmation { grid-template-columns: 42px minmax(0, 1fr); }
+  body.washwiz-theme .booking-confirmation button { grid-column: 1 / -1; width: 100%; }
+  body.washwiz-theme .selected-booking-shop { grid-template-columns: 42px minmax(0, 1fr); }
+  body.washwiz-theme .selected-booking-shop button { grid-column: 1 / -1; width: 100%; }
   body.washwiz-theme :is(.customer-tool-card, .order-card) { padding: 22px 18px; }
   body.washwiz-theme .customer-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; overflow: visible; }
   body.washwiz-theme .customer-tabs button { min-width: 0; }

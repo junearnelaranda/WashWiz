@@ -23,7 +23,7 @@
           <div>
             <p class="eyebrow">Order Session</p>
             <h2>My Order</h2>
-            <p><span class="status-pill success">Verified Order</span></p>
+            <p><span class="status-pill success" id="orderStatusBadge">Verified Order</span></p>
           </div>
           <div class="order-id-panel">
             <span>Order ID</span>
@@ -40,7 +40,7 @@
 
         <div id="customerOverview" class="customer-tab-panel active-customer-tab">
           <article class="order-card clay">
-            <div class="section-head tight"><h3>Order Details</h3><span class="status-pill warning">Processing</span></div>
+            <div class="section-head tight"><h3>Order Details</h3><span class="status-pill warning" id="overviewStatus">Processing</span></div>
             <div class="detail-grid" id="orderDetailsGrid"></div>
           </article>
         </div>
@@ -50,8 +50,8 @@
             <h3>Order Tracking</h3>
             <div class="tracking-timeline" id="trackingTimeline"></div>
             <div class="status-summary">
-              <div><span>Current Status</span><strong>Your order is currently being processed.</strong></div>
-              <div><span>Last Updated</span><strong>August 25, 2026 - 8:30 PM</strong></div>
+              <div><span>Current Status</span><strong id="trackingStatusText">Your order is currently being processed.</strong></div>
+              <div><span>Last Updated</span><strong id="trackingUpdated">August 25, 2026 - 8:30 PM</strong></div>
             </div>
             <p class="empty-state compact-empty hidden" id="trackingEmpty">No tracking information yet.</p>
           </article>
@@ -61,8 +61,8 @@
           <article class="order-card clay">
             <h3>Payment Details</h3>
             <div class="payment-summary" id="paymentSummary"></div>
-            <div class="payment-progress"><span></span></div>
-            <p class="payment-caption">PHP 2,000 / PHP 3,500 paid</p>
+            <div class="payment-progress"><span id="paymentProgressBar"></span></div>
+            <p class="payment-caption" id="paymentCaption">PHP 2,000 / PHP 3,500 paid</p>
             <div class="section-head transactions-head"><h3>Payment History</h3></div>
             <div id="paymentHistory" class="payment-history"></div>
             <p class="empty-state compact-empty hidden" id="paymentEmpty">No payment history yet.</p>

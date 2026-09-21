@@ -108,6 +108,7 @@ body[data-page="bookings"] {
 .booking-status.drying { color: #c65b12; background: #fff7edcc; border-color: #fed7aa99; }
 .booking-status.completed { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
 .booking-status.paid { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
+.booking-status.requested { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
 .booking-status.in-cycle::before { animation: bookingPulse 2s ease-in-out infinite; }
 .booking-row-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .booking-action { min-height: 34px; padding: 8px 12px; }

@@ -18,7 +18,7 @@
   }
 
   function statusBadge(status) {
-    const classes = { "In Cycle": "in-cycle", Drying: "drying", Completed: "completed", Paid: "paid" };
+    const classes = { Requested: "requested", "In Cycle": "in-cycle", Drying: "drying", Completed: "completed", Paid: "paid" };
     return `<span class="booking-status ${classes[status] || ""}">${text(status)}</span>`;
   }
 
@@ -40,7 +40,7 @@
   window.renderBookingsPage = () => {
     const query = byId("bookingSearch").value.trim().toLowerCase();
     const searched = state.bookings.map((booking, index) => ({ booking, index })).filter(({ booking }) =>
-      [booking.customer, booking.contact, booking.machine, booking.type, booking.status, booking.time].join(" ").toLowerCase().includes(query)
+      [booking.customer, booking.contact, booking.facility, booking.machine, booking.type, booking.status, booking.time].join(" ").toLowerCase().includes(query)
     );
     document.querySelectorAll("[data-booking-status]").forEach(button => {
       const status = button.dataset.bookingStatus;
@@ -83,10 +83,12 @@
     openDialog(receipt ? "Booking receipt" : "Booking details", `
       <div class="booking-dialog-summary">${customerCell(booking)}${statusBadge(booking.status)}</div>
       <dl class="booking-record">
-        <div><dt>Facility</dt><dd>Bluewater Laundry</dd></div>
+        <div><dt>Facility</dt><dd>${text(booking.facility || "Bluewater Laundry")}</dd></div>
         <div><dt>Machine</dt><dd>${text(booking.machine)} / ${text(machine?.label || booking.type)}</dd></div>
         ${machine ? `<div><dt>Capacity</dt><dd>${text(machine.load)}</dd></div>` : ""}
         <div><dt>Booking time</dt><dd>${text(booking.time)}</dd></div>
+        ${booking.id ? `<div><dt>Reference</dt><dd>${text(booking.id)}</dd></div>` : ""}
+        ${booking.notes ? `<div><dt>Customer notes</dt><dd>${text(booking.notes)}</dd></div>` : ""}
         <div class="receipt-total"><dt>Total</dt><dd>${text(money(booking.total))}</dd></div>
       </dl>
       <div class="booking-dialog-actions">${receipt ? `<button class="booking-action" type="button" data-download-booking>${dashboardIcon("download")}Download</button><button class="booking-action" type="button" data-print-booking>${dashboardIcon("printer")}Print</button>` : `<button class="booking-action" type="button" data-booking-receipt="${index}">${dashboardIcon("receipt-text")}Receipt</button>`}</div>`, receipt);
@@ -95,7 +97,7 @@
   function downloadReceipt() {
     if (!selectedBooking) return;
     const booking = selectedBooking;
-    const receipt = ["WashWiz - Booking Receipt", "Bluewater Laundry", "", `Customer: ${booking.customer}`, `Contact: ${booking.contact}`, `Machine: ${booking.machine} (${booking.type})`, `Status: ${booking.status}`, `Time: ${booking.time}`, "", `Total: ${money(booking.total)}`].join("\r\n");
+    const receipt = ["WashWiz - Booking Receipt", booking.facility || "Bluewater Laundry", "", `Customer: ${booking.customer}`, `Contact: ${booking.contact}`, `Machine: ${booking.machine} (${booking.type})`, `Status: ${booking.status}`, `Time: ${booking.time}`, "", `Total: ${money(booking.total)}`].join("\r\n");
     const url = URL.createObjectURL(new Blob([receipt], { type: "text/plain;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;
