@@ -29,3 +29,8 @@ document.querySelector('.contact form')?.addEventListener('submit', event => {
   event.currentTarget.querySelector('output').textContent = 'Thanks! Your message is ready to be sent to the WashWiz team.';
   event.currentTarget.reset();
 });
+const landingFavicon = document.createElement("link");
+landingFavicon.rel = "icon";
+landingFavicon.type = "image/png";
+landingFavicon.href = "logo-transparent.png";
+document.head.appendChild(landingFavicon);
