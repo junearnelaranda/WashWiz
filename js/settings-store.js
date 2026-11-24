@@ -2,11 +2,12 @@
 
 window.WashWizSettings = (() => {
   const key = "washwizSettings";
+  const shop = () => window.WashWizCurrentShop || null;
   const defaults = () => ({
-    profile: { name: "Bluewater Laundry", email: "facility@bluewater.test", phone: "", photo: "" },
+    profile: { name: shop()?.name || "Your facility", email: "", phone: "", photo: "" },
     notifications: { support: true, alerts: true },
-    stores: [{ id: "WW-001", name: "Bluewater Laundry", address: "", hotline: "", opens: "07:00", closes: "22:00", machines: 7, status: "Active" }],
-    selectedStore: "WW-001",
+    stores: [{ id: shop()?.id || "WW-001", name: shop()?.name || "Your facility", address: shop()?.address || "", hotline: "", opens: "07:00", closes: "22:00", machines: 0, status: shop()?.status || "Active" }],
+    selectedStore: shop()?.id || "WW-001",
     savedAt: ""
   });
   const escape = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -16,7 +17,8 @@ window.WashWizSettings = (() => {
     try {
       const saved = JSON.parse(localStorage.getItem(key));
       if (!saved || typeof saved !== "object") return result;
-      if (typeof saved.profile?.name === "string") result.profile.name = saved.profile.name;
+      if (shop()) { /* the live shop name wins over anything saved in this browser */ }
+      else if (typeof saved.profile?.name === "string") result.profile.name = saved.profile.name;
       else if (typeof saved.profile?.firstName === "string" || typeof saved.profile?.lastName === "string") {
         result.profile.name = [saved.profile.firstName, saved.profile.lastName].filter(Boolean).join(" ");
       }
@@ -37,7 +39,7 @@ window.WashWizSettings = (() => {
     } catch { /* Unavailable or invalid browser storage uses the standard facility. */ }
     return result;
   }
-  const initials = profile => profile.name.split(/\s+/).filter(Boolean).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "BW";
+  const initials = profile => profile.name.split(/\s+/).filter(Boolean).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "WW";
   function avatar(profile) {
     return validPhoto(profile.photo) ? `<img class="facility-profile-photo" src="${profile.photo}" alt="">` : escape(initials(profile));
   }
@@ -49,6 +51,8 @@ window.WashWizSettings = (() => {
       facilityProfile.setAttribute("aria-label", "View facility profile");
       facilityProfile.querySelector("strong").textContent = data.profile.name;
     }
+    document.querySelectorAll(".hub-initials").forEach(node => { node.textContent = initials(data.profile); });
+    document.querySelectorAll(".hub-name").forEach(node => { node.textContent = data.profile.name; });
     document.body.classList.toggle("hide-support-count", !data.notifications.support);
     document.body.classList.toggle("hide-alert-indicator", !data.notifications.alerts);
   }

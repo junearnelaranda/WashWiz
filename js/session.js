@@ -1,190 +1,127 @@
-const customerBookingStorageKey = "washwizCustomerBookings";
+"use strict";
 
-const defaultSessionOrder = {
-  id: "LW7K4M9Q2X8R6P3",
-  customer: "Juan Dela Cruz",
-  date: "August 25, 2026",
-  service: "Custom Printing Service",
-  quantity: "10",
-  total: "PHP 3,500.00",
-  expectedCompletion: "August 30, 2026",
-  status: "Processing",
-  paymentHistory: [
-    { date: "August 20, 2026", method: "GCash", amount: "PHP 2,000.00", status: "Paid" }
-  ],
-  tracking: [
-    { label: "Order Received", state: "complete" },
-    { label: "Confirmed", state: "complete" },
-    { label: "Processing", state: "current" },
-    { label: "Ready", state: "upcoming" },
-    { label: "Completed", state: "upcoming" }
-  ]
-};
-
-function storedSessionOrder() {
-  const orderId = requestedOrderId().toUpperCase();
-  try {
-    const bookings = JSON.parse(localStorage.getItem(customerBookingStorageKey) || "[]");
-    const booking = Array.isArray(bookings) ? bookings.find(item => item.id?.toUpperCase() === orderId) : null;
-    if (!booking) return null;
-    const scheduledDate = new Intl.DateTimeFormat("en-PH", { month: "long", day: "numeric", year: "numeric" })
-      .format(new Date(`${booking.date}T00:00:00`));
-    const createdDate = new Intl.DateTimeFormat("en-PH", { month: "long", day: "numeric", year: "numeric" })
-      .format(new Date(booking.createdAt || Date.now()));
-    return {
-      id: booking.id,
-      customer: booking.customer,
-      date: createdDate,
-      service: booking.service,
-      quantity: "1 standard load",
-      total: `PHP ${Number(booking.total).toLocaleString("en-PH")}`,
-      totalValue: Number(booking.total),
-      expectedCompletion: `${scheduledDate} at ${booking.time}`,
-      status: booking.status || "Requested",
-      facility: booking.facility || "Bluewater Laundry",
-      machine: booking.machine || "Unassigned",
-      notes: booking.notes || "None",
-      paymentHistory: [],
-      tracking: [
-        { label: "Booking Requested", state: "current" },
-        { label: "Confirmed", state: "upcoming" },
-        { label: "Dropped Off", state: "upcoming" },
-        { label: "In Service", state: "upcoming" },
-        { label: "Ready", state: "upcoming" }
-      ]
-    };
-  } catch {
-    return null;
-  }
-}
-
-const sessionOrder = storedSessionOrder() || defaultSessionOrder;
-
-const sessionState = {
-  customerTab: "overview",
-  chatMessages: sessionOrder.totalValue ? [
-    { sender: "Admin", body: "Your booking request has been received. We will confirm your drop-off schedule shortly." }
-  ] : [
-    { sender: "Admin", body: "Hello Juan! Your order is now being processed." },
-    { sender: "Customer", body: "Thank you. When will it be ready?" },
-    { sender: "Admin", body: "Expected completion is August 30." }
-  ]
-};
-
-const supportStorageKey = "washwizSupportThreads";
+// Customer order page: reads the real order from Supabase and updates live when the facility changes it.
+const db = window.WashWizDB;
+const esc = db.escape;
 const sessionById = id => document.getElementById(id);
 
+const sessionState = { customerTab: "overview", order: null, chatMessages: [], updatedAt: null };
+
 function requestedOrderId() {
-  return new URLSearchParams(window.location.search).get("orderId") || sessionOrder.id;
+  return (new URLSearchParams(window.location.search).get("orderId") || "").trim().toUpperCase();
 }
 
+// The customer verified with order ID + full name on customer.html; the name is kept in this tab only.
+function orderAccess() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("washwizOrderSession") || "null");
+    if (saved && saved.id && saved.id.toUpperCase() === requestedOrderId()) return saved;
+  } catch { /* storage unavailable */ }
+  return null;
+}
+
+function goVerify() {
+  window.location.replace(`customer.html#verify-${encodeURIComponent(requestedOrderId())}`);
+}
+
+const STEPS = [
+  { label: "Booking Requested", statuses: ["Requested"] },
+  { label: "Confirmed", statuses: ["Confirmed"] },
+  { label: "In Service", statuses: ["Processing", "In Cycle", "Drying"] },
+  { label: "Ready for Pickup", statuses: ["Ready for Pickup"] },
+  { label: "Completed", statuses: ["Completed", "Paid"] }
+];
+
+const STATUS_TEXT = {
+  Requested: "Your request is waiting for the shop to confirm it.",
+  Confirmed: "The shop confirmed your booking. See you at drop-off!",
+  Processing: "The shop is working on your laundry.",
+  "In Cycle": "Your laundry is washing now.",
+  Drying: "Your laundry is drying now.",
+  "Ready for Pickup": "Your laundry is ready for pickup.",
+  Completed: "Your order is complete. Thank you!",
+  Paid: "Your order is paid and complete. Thank you!",
+  Cancelled: "This booking was cancelled. Message the shop if this is a mistake."
+};
+
+const longDate = value => new Intl.DateTimeFormat("en-PH", { month: "long", day: "numeric", year: "numeric" }).format(new Date(value));
+
 function renderSessionOrder() {
-  const orderId = requestedOrderId().toUpperCase();
-  const isRequestedBooking = Boolean(sessionOrder.totalValue);
-  sessionById("sessionOrderId").textContent = orderId;
-  sessionById("chatOrderLabel").textContent = `Regarding Order ${orderId}`;
-  sessionById("orderStatusBadge").textContent = isRequestedBooking ? "Verified Booking" : "Verified Order";
-  sessionById("overviewStatus").textContent = sessionOrder.status;
-  sessionById("trackingStatusText").textContent = isRequestedBooking
-    ? "Your request is waiting for facility confirmation."
-    : "Your order is currently being processed.";
-  sessionById("trackingUpdated").textContent = isRequestedBooking ? "Just now" : "August 25, 2026 - 8:30 PM";
+  const order = sessionState.order;
+  if (!order) return;
+  const stepIndex = STEPS.findIndex(step => step.statuses.includes(order.status));
+  const peso = value => `PHP ${Number(value || 0).toLocaleString("en-PH")}`;
+  const paid = ["Paid", "Completed"].includes(order.status);
 
+  sessionById("sessionOrderId").textContent = order.id;
+  sessionById("chatOrderLabel").textContent = `Regarding Order ${order.id}`;
+  sessionById("orderStatusBadge").textContent = "Verified Booking";
+  sessionById("overviewStatus").textContent = order.status;
+  sessionById("trackingStatusText").textContent = STATUS_TEXT[order.status] || `Status: ${order.status}`;
+  sessionById("trackingUpdated").textContent = new Date(order.updated_at || order.created_at).toLocaleString("en-PH", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+  const scheduled = order.booking_date ? `${longDate(`${order.booking_date}T00:00:00`)}${order.booking_time ? ` at ${order.booking_time}` : ""}` : "-";
   sessionById("orderDetailsGrid").innerHTML = [
-    ["Order ID", orderId],
-    ["Customer", sessionOrder.customer],
-    ["Order Date", sessionOrder.date],
-    ...(isRequestedBooking ? [["Laundry Shop", sessionOrder.facility]] : []),
-    ["Service", sessionOrder.service],
-    ["Quantity", sessionOrder.quantity],
-    ["Total", sessionOrder.total],
-    [isRequestedBooking ? "Scheduled Drop-off" : "Expected Completion", sessionOrder.expectedCompletion],
-    ...(isRequestedBooking ? [["Machine", sessionOrder.machine], ["Special Instructions", sessionOrder.notes]] : [])
-  ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
+    ["Order ID", order.id],
+    ["Customer", order.customer],
+    ["Order Date", longDate(order.created_at)],
+    ["Laundry Shop", order.facility],
+    ["Service", order.service || order.type || "-"],
+    ["Total", peso(order.total)],
+    ["Scheduled Drop-off", scheduled],
+    ["Machine", order.machine || "Unassigned"],
+    ["Special Instructions", order.notes || "None"]
+  ].map(([label, value]) => `<div class="detail-item"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join("");
 
-  sessionById("trackingTimeline").innerHTML = sessionOrder.tracking.map(step => `
-    <div class="tracking-step ${step.state}">
-      <span>${step.state === "complete" ? "OK" : ""}</span>
-      <strong>${step.label}</strong>
-    </div>
-  `).join("");
-  sessionById("trackingEmpty").classList.toggle("hidden", sessionOrder.tracking.length > 0);
+  sessionById("trackingTimeline").innerHTML = order.status === "Cancelled"
+    ? `<div class="tracking-step current"><span></span><strong>Cancelled</strong></div>`
+    : STEPS.map((step, index) => {
+      const state = index < stepIndex || (index === stepIndex && index === STEPS.length - 1) ? "complete" : index === stepIndex ? "current" : "upcoming";
+      return `<div class="tracking-step ${state}"><span>${state === "complete" ? "OK" : ""}</span><strong>${step.label}</strong></div>`;
+    }).join("");
+  sessionById("trackingEmpty").classList.add("hidden");
 
-  const amountPaid = isRequestedBooking ? "PHP 0" : "PHP 2,000.00";
-  const remaining = isRequestedBooking ? sessionOrder.total : "PHP 1,500.00";
   sessionById("paymentSummary").innerHTML = [
-    ["Total Amount", sessionOrder.total],
-    ["Amount Paid", amountPaid],
-    ["Remaining Balance", remaining],
-    ["Payment Status", `<span class="status-pill warning">${isRequestedBooking ? "Payment Pending" : "Partially Paid"}</span>`]
-  ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
-  sessionById("paymentProgressBar").style.width = isRequestedBooking ? "0%" : "57%";
-  sessionById("paymentCaption").textContent = isRequestedBooking ? `PHP 0 / ${sessionOrder.total} paid` : "PHP 2,000 / PHP 3,500 paid";
-
-  sessionById("paymentHistory").innerHTML = sessionOrder.paymentHistory.map(payment => `
-    <div class="payment-row">
-      <div><strong>${payment.date}</strong><span>${payment.method}</span></div>
-      <div><strong>${payment.amount}</strong><span class="status-pill success">${payment.status}</span></div>
-    </div>
-  `).join("");
-  sessionById("paymentEmpty").classList.toggle("hidden", sessionOrder.paymentHistory.length > 0);
+    ["Total Amount", peso(order.total)],
+    ["Amount Paid", paid ? peso(order.total) : "PHP 0"],
+    ["Remaining Balance", paid ? "PHP 0" : peso(order.total)],
+    ["Payment Status", `<span class="status-pill ${paid ? "success" : "warning"}">${paid ? "Paid" : "Pay at the shop"}</span>`]
+  ].map(([label, value]) => `<div class="detail-item"><span>${label}</span><strong>${label === "Payment Status" ? value : esc(value)}</strong></div>`).join("");
+  sessionById("paymentProgressBar").style.width = paid ? "100%" : "0%";
+  sessionById("paymentCaption").textContent = `${paid ? peso(order.total) : "PHP 0"} / ${peso(order.total)} paid`;
+  sessionById("paymentHistory").innerHTML = paid
+    ? `<div class="payment-row"><div><strong>${esc(longDate(order.updated_at || order.created_at))}</strong><span>At the shop</span></div><div><strong>${esc(peso(order.total))}</strong><span class="status-pill success">Paid</span></div></div>`
+    : "";
+  sessionById("paymentEmpty").classList.toggle("hidden", paid);
 
   renderSessionChat();
 }
 
 function renderSessionChat() {
-  sessionById("chatMessages").innerHTML = sessionState.chatMessages.map(message => `
+  const box = sessionById("chatMessages");
+  box.innerHTML = sessionState.chatMessages.map(message => `
     <div class="chat-message ${message.sender === "Customer" ? "customer" : "admin"}">
-      <span>${message.sender}</span>
-      <p>${message.body}</p>
+      <span>${message.sender === "Customer" ? "You" : "Shop"}</span>
+      <p>${esc(message.body)}</p>
     </div>
   `).join("");
   sessionById("chatEmpty").classList.toggle("hidden", sessionState.chatMessages.length > 0);
+  box.scrollTop = box.scrollHeight;
 }
 
-function persistCustomerSupportMessage(body) {
-  const orderId = requestedOrderId().toUpperCase();
-  const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  let storedThreads = [];
-  try {
-    storedThreads = JSON.parse(localStorage.getItem(supportStorageKey) || "[]");
-  } catch {
-    storedThreads = [];
-  }
-  const threadId = `customer-${orderId.toLowerCase()}`;
-  let thread = storedThreads.find(item => item.orderId === orderId);
-  if (!thread) {
-    thread = {
-      id: threadId,
-      customer: sessionOrder.customer,
-      orderId,
-      machine: sessionOrder.machine || "Unassigned",
-      machineLabel: sessionOrder.service,
-      status: "active",
-      urgency: "Live Active",
-      lastSeen: "Just now",
-      eta: "18 min left",
-      total: sessionOrder.totalValue || 3500,
-      paid: false,
-      tag: sessionOrder.machine && sessionOrder.machine !== "Unassigned" ? `Machine ${sessionOrder.machine}` : "Booking Request",
-      preview: body,
-      messages: sessionOrder.totalValue
-        ? [{ sender: "Admin", body: "Your booking request has been received. We will confirm your drop-off schedule shortly.", time: now }]
-        : [
-          { sender: "Admin", body: "Hello Juan! Your order is now being processed.", time: "10:14 AM" },
-          { sender: "Customer", body: "Thank you. When will it be ready?", time: "10:16 AM" },
-          { sender: "Admin", body: "Expected completion is August 30.", time: "10:17 AM" }
-        ]
-    };
-    storedThreads.push(thread);
-  }
-  thread.orderId = orderId;
-  thread.status = "active";
-  thread.urgency = "Live Active";
-  thread.lastSeen = "Just now";
-  thread.preview = body;
-  thread.messages.push({ sender: "Customer", body, time: now });
-  localStorage.setItem(supportStorageKey, JSON.stringify(storedThreads));
+async function loadOrder() {
+  const access = orderAccess();
+  if (!access) { goVerify(); return false; }
+  const [booking, messages] = await Promise.all([
+    db.client.rpc("get_booking", { p_id: access.id, p_name: access.name }),
+    db.client.rpc("get_order_messages", { p_id: access.id, p_name: access.name })
+  ]);
+  if (booking.error) { sessionById("trackingStatusText").textContent = db.errorText(booking.error); return false; }
+  if (!booking.data) { goVerify(); return false; }
+  sessionState.order = booking.data;
+  sessionState.chatMessages = messages.data || [];
+  renderSessionOrder();
+  return true;
 }
 
 function setSessionTab(tab) {
@@ -201,19 +138,33 @@ document.querySelectorAll("[data-customer-tab]").forEach(button => {
   button.addEventListener("click", () => setSessionTab(button.dataset.customerTab));
 });
 
-sessionById("chatForm").addEventListener("submit", event => {
+sessionById("chatForm").addEventListener("submit", async event => {
   event.preventDefault();
   const input = sessionById("chatInput");
   const body = input.value.trim();
-  if (!body) return;
-  sessionState.chatMessages.push({ sender: "Customer", body });
-  persistCustomerSupportMessage(body);
+  const access = orderAccess();
+  if (!body || !access) return;
+  const button = event.submitter;
+  if (button) button.disabled = true;
+  const { error } = await db.client.rpc("send_order_message", { p_id: access.id, p_name: access.name, p_body: body });
+  if (button) button.disabled = false;
+  if (error) { alert(db.errorText(error)); return; }
   input.value = "";
-  renderSessionChat();
+  loadOrder(); // the live update will also arrive; this makes your own message appear instantly
 });
 
 sessionById("sessionLogout").addEventListener("click", () => {
+  try { sessionStorage.removeItem("washwizOrderSession"); } catch { /* storage unavailable */ }
   window.location.href = "customer.html";
 });
 
-renderSessionOrder();
+sessionById("sessionOrderId").textContent = requestedOrderId() || "-";
+sessionById("trackingStatusText").textContent = "Loading your order...";
+loadOrder().then(ok => {
+  if (!ok) return;
+  // The database broadcasts "changed" on order:<ID> whenever this booking or its chat changes.
+  const refresh = db.debounce(loadOrder, 200);
+  db.client.channel(`order:${requestedOrderId()}`)
+    .on("broadcast", { event: "changed" }, refresh)
+    .subscribe();
+});

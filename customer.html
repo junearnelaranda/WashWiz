@@ -35,7 +35,7 @@
             <input id="shopSearch" type="search" placeholder="Search shop, street, or area" autocomplete="off">
           </label>
           <div class="shop-results-head">
-            <p id="shopResultsSummary" role="status">3 shops found</p>
+            <p id="shopResultsSummary" role="status">Loading shops...</p>
             <span><i class="machine-status-dot available"></i>Live availability</span>
           </div>
           <div id="shopResults" class="shop-results"></div>
@@ -49,30 +49,12 @@
           <form id="customerBookingForm" class="customer-page-form">
             <section class="selected-booking-shop">
               <span class="selected-shop-mark" aria-hidden="true">W</span>
-              <div><small>Booking at</small><strong id="selectedBookingShop">Bluewater Laundry</strong><span id="selectedBookingAddress">14 Mabini Street, Poblacion</span></div>
+              <div><small>Booking at</small><strong id="selectedBookingShop">Choose a shop</strong><span id="selectedBookingAddress"></span></div>
               <button class="secondary-btn compact" id="changeBookingShop" type="button">Change</button>
             </section>
 
-            <fieldset class="booking-service-picker">
+            <fieldset class="booking-service-picker" id="bookingServicePicker">
               <legend>Choose a service</legend>
-              <label class="booking-service-option">
-                <input type="radio" name="bookingService" value="wash-fold" checked>
-                <span class="booking-service-check" aria-hidden="true"></span>
-                <span><strong>Wash &amp; Fold</strong><small>Freshly washed and neatly folded</small></span>
-                <b>PHP 199</b>
-              </label>
-              <label class="booking-service-option">
-                <input type="radio" name="bookingService" value="wash-dry-fold">
-                <span class="booking-service-check" aria-hidden="true"></span>
-                <span><strong>Wash, Dry &amp; Fold</strong><small>Complete care for one standard load</small></span>
-                <b>PHP 299</b>
-              </label>
-              <label class="booking-service-option">
-                <input type="radio" name="bookingService" value="express">
-                <span class="booking-service-check" aria-hidden="true"></span>
-                <span><strong>Express Service</strong><small>Priority turnaround in about 3 hours</small></span>
-                <b>PHP 399</b>
-              </label>
             </fieldset>
 
             <div class="booking-contact-grid">
@@ -95,11 +77,11 @@
             <label class="booking-notes">Special instructions <span>(optional)</span><textarea id="bookingNotes" rows="3" maxlength="240" placeholder="Detergent preference, fabric care, or other notes"></textarea></label>
 
             <aside class="customer-booking-summary" aria-live="polite">
-              <div><span>Laundry shop</span><strong id="bookingSummaryShop">Bluewater Laundry</strong></div>
-              <div><span>Selected service</span><strong id="bookingSummaryService">Wash &amp; Fold</strong></div>
+              <div><span>Laundry shop</span><strong id="bookingSummaryShop">-</strong></div>
+              <div><span>Selected service</span><strong id="bookingSummaryService">-</strong></div>
               <div><span>Drop-off</span><strong id="bookingSummarySchedule">Choose a date and time</strong></div>
-              <div class="booking-summary-total"><span>Estimated total</span><strong id="bookingSummaryTotal">PHP 199</strong></div>
-              <small>Final price may vary for oversized loads or added supplies.</small>
+              <div class="booking-summary-total"><span>Estimated total</span><strong id="bookingSummaryTotal">-</strong></div>
+              <small>Prices are set by the shop. Final price may vary for oversized loads or added supplies.</small>
             </aside>
 
             <p id="bookingMessage" class="verification-message" aria-live="polite"></p>
@@ -130,7 +112,7 @@
           <div class="or-divider"><span>OR</span></div>
 
           <form id="customerVerificationForm" class="verification-form">
-            <label>Order ID<input id="customerOrderId" type="text" value="LW7K4M9Q2X8R6P3" autocomplete="off" required></label>
+            <label>Order ID<input id="customerOrderId" type="text" placeholder="WW-XXXXXXXX" autocomplete="off" required></label>
             <label>Full Name<input id="customerFullName" type="text" placeholder="Enter your full name" autocomplete="name" required></label>
             <p id="customerVerificationMessage" class="verification-message" aria-live="polite"></p>
             <button class="primary-btn" id="customerVerifyButton" type="submit">Verify Order</button>
@@ -141,6 +123,8 @@
       <footer class="customer-footer">@WashWiz.</footer>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/washwiz-db.js"></script>
     <script src="js/customer.js"></script>
   </body>
 </html>

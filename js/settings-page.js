@@ -6,7 +6,7 @@
   let saved = preferences.load();
   let draft = structuredClone(saved);
   let photoVersion = 0;
-  const tabs = [["profile", "Facility Profile", "user-round"], ["stores", "Franchises & Stores", "layout-dashboard"], ["branch", "Branch Details", "calendar-days"], ["security", "Security & Access", "circle-check"], ["notifications", "Notifications", "bell"]];
+  const tabs = [["profile", "Facility Profile", "user-round"], ["services", "Services & Prices", "dollar-sign"], ["stores", "Franchises & Stores", "layout-dashboard"], ["branch", "Branch Details", "calendar-days"], ["security", "Security & Access", "circle-check"], ["notifications", "Notifications", "bell"]];
   const field = (label, id, type = "text", extra = "") => `<label>${label}<input id="${id}" name="${id}" type="${type}" ${extra}></label>`;
   byId("settings").innerHTML = `
     <div class="settings-tabs" role="tablist" aria-label="Settings sections">${tabs.map(([id, label, icon], index) => `<button id="settingsTab-${id}" type="button" role="tab" aria-controls="settingsPanel-${id}" aria-selected="${index === 0}" tabindex="${index === 0 ? 0 : -1}" data-settings-tab="${id}">${dashboardIcon(icon)}${label}</button>`).join("")}</div>
@@ -24,6 +24,12 @@
           ${field("Account type", "settingsRole", "text", 'value="Facility" readonly')}
           <label>Facility ID<div class="settings-copy-row"><input id="settingsAccountId" value="WW-FACILITY-001" readonly><button class="secondary-btn" id="settingsCopyId" type="button" title="Copy facility ID">Copy</button></div></label>
         </div></div>
+      </section>
+      <section class="settings-panel" id="settingsPanel-services" role="tabpanel" aria-labelledby="settingsTab-services" hidden>
+        <div class="settings-section"><div class="settings-section-head"><div><h3>Services &amp; Prices</h3><p>Your own services and prices. Customers book from this list and are charged what you set here.</p></div><button type="button" id="servicesAdd" class="primary-btn">${dashboardIcon("plus")}Add Service</button></div>
+          <div id="servicesList" class="settings-services-list"></div>
+          <div class="settings-security-action"><div><strong id="servicesState">Saved</strong><small>Changes here are saved separately and go live for customers immediately.</small></div><div class="settings-actions"><button type="button" class="secondary-btn" id="servicesDiscard">Discard</button><button type="button" class="primary-btn" id="servicesSave">${dashboardIcon("circle-check")}Save Services</button></div></div>
+        </div>
       </section>
       <section class="settings-panel" id="settingsPanel-stores" role="tabpanel" aria-labelledby="settingsTab-stores" hidden>
         <div class="settings-section"><div class="settings-section-head"><div><h3>Franchise Stores</h3><p id="settingsStoreCount"></p></div><button type="button" id="settingsAddStore" class="primary-btn">${dashboardIcon("plus")}Register Store</button></div><div id="settingsStoreList" class="settings-store-list"></div></div>
@@ -231,5 +237,59 @@
   window.addEventListener("beforeunload", event => { if (dirty()) { event.preventDefault(); event.returnValue = ""; } });
   byId("menuToggle").setAttribute("aria-expanded", "false");
   document.querySelector('[data-dashboard-dialog="search"]').title = "Search settings";
+
+  // ----- Services & Prices (saved to Supabase, live for customers) -----
+  let services = null; // null = show what is saved for the shop
+  const savedServices = () => (Array.isArray(window.WashWizCurrentShop?.services) ? window.WashWizCurrentShop.services : []).map(item => ({ name: item.name, price: item.price, desc: item.desc || "" }));
+  const servicesDirty = () => services !== null;
+  function renderServices() {
+    const list = services || savedServices();
+    byId("servicesList").innerHTML = list.length ? list.map((item, index) => `<div class="settings-fields settings-service-row">
+        <label>Service name<input data-service-field="name" data-service-index="${index}" maxlength="60" value="${escape(item.name)}" placeholder="e.g. Wash &amp; Fold"></label>
+        <label>Price (PHP)<input data-service-field="price" data-service-index="${index}" type="number" min="0" step="1" value="${escape(item.price)}"></label>
+        <label>Description (optional)<input data-service-field="desc" data-service-index="${index}" maxlength="120" value="${escape(item.desc)}" placeholder="Shown to customers"></label>
+        <button type="button" class="secondary-btn" data-service-remove="${index}">${dashboardIcon("x")}Remove</button>
+      </div>`).join("") : '<p class="dashboard-empty">No services yet. Customers cannot book online until you add at least one.</p>';
+    byId("servicesState").textContent = servicesDirty() ? "Unsaved service changes" : `${list.length} service${list.length === 1 ? "" : "s"} live for customers`;
+    byId("servicesDiscard").disabled = !servicesDirty();
+    byId("servicesSave").disabled = !servicesDirty();
+  }
+  const editServices = () => { if (!services) services = savedServices(); return services; };
+  byId("servicesList").addEventListener("input", event => {
+    const index = event.target.dataset.serviceIndex;
+    if (index === undefined) return;
+    event.stopPropagation();
+    editServices()[Number(index)][event.target.dataset.serviceField] = event.target.value;
+    byId("servicesState").textContent = "Unsaved service changes";
+    byId("servicesDiscard").disabled = false;
+    byId("servicesSave").disabled = false;
+  });
+  byId("servicesList").addEventListener("click", event => {
+    const remove = event.target.closest("[data-service-remove]");
+    if (!remove) return;
+    editServices().splice(Number(remove.dataset.serviceRemove), 1);
+    renderServices();
+  });
+  byId("servicesAdd").addEventListener("click", () => {
+    editServices().push({ name: "", price: "", desc: "" });
+    renderServices();
+    byId("servicesList").querySelector(".settings-service-row:last-child input")?.focus();
+  });
+  byId("servicesDiscard").addEventListener("click", () => { services = null; renderServices(); });
+  byId("servicesSave").addEventListener("click", async () => {
+    const clean = editServices().map(item => ({ name: String(item.name).trim(), price: Number(item.price), desc: String(item.desc || "").trim() }));
+    if (clean.some(item => !item.name)) { feedback("Every service needs a name.", true); return; }
+    if (clean.some(item => item.price === "" || Number.isNaN(item.price) || item.price < 0)) { feedback("Every service needs a price of 0 or more.", true); return; }
+    byId("servicesSave").disabled = true;
+    const { error } = await window.WashWizDB.client.rpc("set_shop_services", { p_shop: facility.shop.id, p_services: clean });
+    if (error) { byId("servicesSave").disabled = false; feedback(window.WashWizDB.errorText(error), true); return; }
+    window.WashWizCurrentShop.services = clean;
+    services = null;
+    renderServices();
+    feedback("Services saved. Customers see your new prices now.");
+  });
+  document.addEventListener("washwiz:data", () => { if (!servicesDirty()) renderServices(); });
+
+  renderServices();
   render();
 })();

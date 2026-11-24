@@ -1,7 +1,9 @@
 "use strict";
 
 const requestedFacilityPage = document.body.dataset.page || "dashboard";
-const hasFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true";
+// A real Supabase sign-in is kept in localStorage; app.js verifies it before showing any data.
+const hasSupabaseSession = (() => { try { return Object.keys(localStorage).some(key => key.startsWith("sb-") && key.endsWith("-auth-token")); } catch { return false; } })();
+const hasFacilitySession = sessionStorage.getItem("washwizFacilityLoggedIn") === "true" || hasSupabaseSession;
 const useLandingWasherLoader = new URLSearchParams(location.search).get("loader") === "washer";
 const initialFacilityLoader = useLandingWasherLoader ? "washer" : "none";
 const initialFacilityLoaderClass = useLandingWasherLoader ? "is-washer" : "is-done";
@@ -85,17 +87,19 @@ const facilityPageMarkup = `
         </div>
 
         <form id="loginForm" class="auth-form">
-          <label>Facility email<input id="facilityLoginEmail" type="email" value="facility@bluewater.test" required></label>
-          <label>Password<input type="password" value="washwiz" required></label>
+          <label>Facility email<input id="facilityLoginEmail" type="email" autocomplete="username" required></label>
+          <label>Password<input id="facilityLoginPassword" type="password" autocomplete="current-password" required></label>
           <button class="primary-btn" type="submit">Enter Facility Dashboard</button>
         </form>
 
         <form id="registerForm" class="auth-form hidden">
-          <label>Facility name<input id="facilityName" type="text" value="Bluewater Laundry" required></label>
-          <label>Facility email<input id="facilityEmail" type="email" value="facility@bluewater.test" required></label>
-          <label>Password<input type="password" value="washwiz" required></label>
+          <label>Facility (shop) name<input id="facilityName" type="text" maxlength="100" placeholder="e.g. Sunshine Laundromat" required></label>
+          <label>Facility email<input id="facilityEmail" type="email" autocomplete="username" required></label>
+          <label>Password<input id="facilityPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required></label>
           <button class="primary-btn" type="submit">Create Facility</button>
+          <small class="auth-note">For laundry shop owners. Your shop is created when you register, then add your machines and prices.</small>
         </form>
+        <p id="authMessage" class="verification-message auth-message" role="status" aria-live="polite"></p>
 
         <a class="secondary-btn portal-link" href="customer.html">Customer Page</a>
       </section>
@@ -112,19 +116,19 @@ const facilityPageMarkup = `
           <a class="nav-link" href="bookings.html" data-page-link="bookings">${dashboardNavIcon("calendar-days")}Bookings</a>
           <a class="nav-link" href="details.html" data-page-link="customers">${dashboardNavIcon("users")}Customers</a>
           <a class="nav-link" href="revenue.html" data-page-link="revenue">${dashboardNavIcon("dollar-sign")}Revenue</a>
-          <a class="nav-link live-support-link" href="support.html" data-page-link="support">${dashboardNavIcon("message-circle")}Live Support <span id="supportBadge">3</span></a>
+          <a class="nav-link live-support-link" href="support.html" data-page-link="support">${dashboardNavIcon("message-circle")}Live Support <span id="supportBadge">0</span></a>
           <a class="nav-link" href="settings.html" data-page-link="settings">${dashboardNavIcon("settings")}Settings</a>
         </nav>
         ${["dashboard", "settings"].includes(requestedFacilityPage) ? `
-        <button class="dashboard-facility" type="button" data-dashboard-dialog="profile" aria-label="View Bluewater Laundry's profile" title="Facility profile">
-          <span class="facility-initials">BW</span>
-          <span class="facility-copy"><strong>Bluewater Laundry</strong><small>Facility account</small></span>
+        <button class="dashboard-facility" type="button" data-dashboard-dialog="profile" aria-label="View facility profile" title="Facility profile">
+          <span class="facility-initials"></span>
+          <span class="facility-copy"><strong></strong><small>Facility account</small></span>
           ${dashboardIcon("user-round")}
         </button>` : ""}
         ${requestedFacilityPage === "bookings" ? `
         <div class="bookings-hub">
-          <span class="hub-initials">BW</span>
-          <div><strong>Bluewater Hub</strong><small id="bookingHubStatus">Units online</small></div>
+          <span class="hub-initials"></span>
+          <div><strong class="hub-name">Facility</strong><small id="bookingHubStatus">Units online</small></div>
         </div>` : ""}
         ${requestedFacilityPage === "customers" ? `
         <div class="customers-station">
@@ -154,7 +158,7 @@ const facilityPageMarkup = `
           <div class="top-actions">
             <button class="icon-btn" aria-label="Search" title="${requestedFacilityPage === "customers" ? "Search customers" : requestedFacilityPage === "bookings" ? "Search bookings" : requestedFacilityPage === "support" ? "Search chats" : requestedFacilityPage === "revenue" ? "Search transactions" : "Search machines"}" data-dashboard-dialog="search">${hasNeumorphicFacilityTheme ? dashboardIcon("search") : '<span aria-hidden="true">S</span>'}</button>
             <button class="icon-btn dashboard-alert-button" aria-label="Notifications" title="System alerts" data-dashboard-dialog="alerts">${hasNeumorphicFacilityTheme ? dashboardIcon("bell") : '<span aria-hidden="true">!</span>'}</button>
-            <button class="avatar" aria-label="Facility profile" title="Facility profile" data-dashboard-dialog="profile">${hasNeumorphicFacilityTheme ? "BW" : "BW"}</button>
+            <button class="avatar" aria-label="Facility profile" title="Facility profile" data-dashboard-dialog="profile"></button>
             <button class="secondary-btn compact logout-btn" type="button" id="logoutButton">${hasNeumorphicFacilityTheme ? dashboardIcon("log-out") : ""}Log Out</button>
           </div>
         </header>
@@ -187,6 +191,7 @@ const facilityPageMarkup = `
                 <div class="segmented" id="bookingMachineFilter">
                   <button class="active" data-filter="all">All</button>
                   <button data-filter="small">Small</button>
+                  <button data-filter="medium">Medium</button>
                   <button data-filter="large">Large</button>
                   <button data-filter="xl">XLarge</button>
                 </div>
@@ -242,8 +247,10 @@ const facilityPageMarkup = `
             <div class="bookings-filters" role="group" aria-label="Booking status">
               <button type="button" class="active" data-booking-status="all" aria-pressed="true">All <span data-booking-count="all">(0)</span></button>
               <button type="button" data-booking-status="Requested" aria-pressed="false">Requested <span data-booking-count="Requested">(0)</span></button>
+              <button type="button" data-booking-status="Confirmed" aria-pressed="false">Confirmed <span data-booking-count="Confirmed">(0)</span></button>
               <button type="button" data-booking-status="In Cycle" aria-pressed="false">In Cycle <span data-booking-count="In Cycle">(0)</span></button>
               <button type="button" data-booking-status="Drying" aria-pressed="false">Drying <span data-booking-count="Drying">(0)</span></button>
+              <button type="button" data-booking-status="Ready for Pickup" aria-pressed="false">Ready <span data-booking-count="Ready for Pickup">(0)</span></button>
               <button type="button" data-booking-status="Completed" aria-pressed="false">Completed <span data-booking-count="Completed">(0)</span></button>
               <button type="button" class="hidden" data-booking-status="Paid" aria-pressed="false">Paid <span data-booking-count="Paid">(0)</span></button>
             </div>
@@ -402,7 +409,7 @@ const facilityPageMarkup = `
         <div class="admin-access-body">
           <div class="admin-order-id">
             <span>Order ID</span>
-            <strong>LW7K4M9Q2X8R6P3</strong>
+            <strong id="customerAccessOrderId">-</strong>
           </div>
           <div class="qr-placeholder" aria-label="QR code placeholder">
             <span></span>
@@ -413,8 +420,8 @@ const facilityPageMarkup = `
           <p>Scan to view customer order</p>
         </div>
         <div class="access-actions">
-          <button class="secondary-btn compact" type="button" data-copy="LW7K4M9Q2X8R6P3">Copy Order ID</button>
-          <button class="secondary-btn compact" type="button" data-copy="https://example.com/verify/LW7K4M9Q2X8R6P3">Copy Link</button>
+          <button class="secondary-btn compact" type="button" id="customerAccessCopyId" data-copy="">Copy Order ID</button>
+          <button class="secondary-btn compact" type="button" id="customerAccessCopyLink" data-copy="">Copy Link</button>
           <button class="primary-btn compact" type="button" data-print-qr>Print QR</button>
         </div>
         <p class="access-message" aria-live="polite"></p>

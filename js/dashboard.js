@@ -14,7 +14,7 @@
 
   function machineResult(machine) {
     return `<button class="dashboard-result" type="button" data-find-machine="${machine.id}">
-      <span><strong>${machine.id} / ${machine.label}</strong><small>${machine.load} capacity / ${machine.eta}</small></span>
+      <span><strong>${esc(machine.id)} / ${esc(machine.label)}</strong><small>${esc(sizeName(machine.size))} / ${esc(money(machine.price))} / ${esc(machine.eta)}</small></span>
       <span class="badge ${machine.status}">${statusLabel(machine.status)}</span>
     </button>`;
   }
@@ -57,17 +57,20 @@
   function machineForm(machine) {
     const editing = Boolean(machine);
     editingMachineId = machine?.id || null;
-    const value = (field, fallback = "") => machine?.[field] || fallback;
+    const value = (field, fallback = "") => esc(machine?.[field] ?? fallback);
     dialog.innerHTML = `<div class="dashboard-dialog-head"><h3 id="dashboardDialogTitle">${editing ? `Edit ${machine.id}` : "Add new machine"}</h3><button class="icon-btn" type="button" data-dashboard-close aria-label="Close dialog" title="Close">${dashboardIcon("x")}</button></div>
       <form id="dashboardMachineForm" class="dashboard-machine-form">
         <label>Machine code<input name="id" required maxlength="12" value="${value("id")}" placeholder="e.g. W-05"></label>
         <label>Machine name<input name="label" required maxlength="40" value="${value("label")}" placeholder="e.g. Standard Washer"></label>
         <div class="dashboard-form-row">
           <label>Type<select name="type"><option value="washer" ${value("type", "washer") === "washer" ? "selected" : ""}>Washer</option><option value="dryer" ${value("type") === "dryer" ? "selected" : ""}>Dryer</option></select></label>
-          <label>Capacity<input name="load" required maxlength="16" value="${value("load")}" placeholder="e.g. 30 lb"></label>
+          <label>Size<select name="size">${window.WashWizDB.SIZES.map(([size, label]) => `<option value="${size}" ${value("size", "large") === size ? "selected" : ""}>${label}</option>`).join("")}</select></label>
         </div>
         <div class="dashboard-form-row">
-          <label>Rate (PHP)<input name="price" required min="0" step="5" type="number" value="${value("price", 120)}"></label>
+          <label>Capacity (optional)<input name="load" maxlength="16" value="${value("load")}" placeholder="e.g. 8 kg"></label>
+          <label>Your price (PHP)<input name="price" required min="0" step="1" type="number" value="${value("price", "")}" placeholder="Set your own rate"></label>
+        </div>
+        <div class="dashboard-form-row">
           <label>Status<select name="status"><option value="available" ${value("status", "available") === "available" ? "selected" : ""}>Available</option><option value="occupied" ${value("status") === "occupied" ? "selected" : ""}>In use</option><option value="maintenance" ${value("status") === "maintenance" ? "selected" : ""}>Service</option></select></label>
         </div>
         <div class="dashboard-form-actions"><button class="secondary-btn compact" type="button" data-dashboard-close>Cancel</button><button class="primary-btn compact" type="submit">${editing ? "Save changes" : "Add machine"}</button></div>
@@ -79,7 +82,7 @@
   function removeMachine(machine) {
     editingMachineId = machine.id;
     dialog.innerHTML = `<div class="dashboard-dialog-head"><h3 id="dashboardDialogTitle">Remove ${machine.id}?</h3><button class="icon-btn" type="button" data-dashboard-close aria-label="Close dialog" title="Close">${dashboardIcon("x")}</button></div>
-      <p class="dashboard-empty">This will remove <strong>${machine.label}</strong> from the floor list.</p>
+      <p class="dashboard-empty">This will remove <strong>${esc(machine.label)}</strong> from the floor list and from the customer page.</p>
       <div class="dashboard-form-actions"><button class="secondary-btn compact" type="button" data-dashboard-close>Cancel</button><button class="primary-btn compact dashboard-danger" type="button" data-confirm-delete>Remove machine</button></div>`;
     dialog.showModal();
   }
@@ -111,9 +114,11 @@
     if (statusButton) {
       const machine = machines.find(item => item.id === statusButton.dataset.machineId);
       if (machine) {
-        machine.status = statusButton.dataset.machineStatus;
-        machine.eta = statusEta(machine.status);
+        const status = statusButton.dataset.machineStatus;
+        machine.status = status; // show it right away; the live update confirms it
+        machine.eta = statusEta(status);
         refreshDashboardMachines();
+        setMachineStatus(machine.id, status, statusEta(status));
       }
     }
     if (event.target.closest("[data-add-machine]")) machineForm();
@@ -122,15 +127,15 @@
     const deleteButton = event.target.closest("[data-delete-machine]");
     if (deleteButton) removeMachine(machines.find(item => item.id === deleteButton.dataset.deleteMachine));
     if (event.target.closest("[data-confirm-delete]")) {
-      const index = machines.findIndex(item => item.id === editingMachineId);
-      if (index !== -1) machines.splice(index, 1);
+      window.WashWizDB.client.from("machines").delete().eq("shop_id", facility.shop.id).eq("id", editingMachineId).then(({ error }) => {
+        if (error) alert(window.WashWizDB.errorText(error));
+      });
       dialog.close();
-      refreshDashboardMachines();
     }
   });
 
   dialog.addEventListener("submit", event => {
-    if (event.target.id !== "dashboardMachineForm") return;
+    if (!event.target.matches("#dashboardMachineForm")) return; // form.id is shadowed by the input named "id"
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.target));
     const id = values.id.trim().toUpperCase();
@@ -140,12 +145,18 @@
       event.target.querySelector("input[name=id]").reportValidity();
       return;
     }
-    const machine = { id, label: values.label.trim(), type: values.type, load: values.load.trim(), price: Number(values.price), status: values.status, eta: statusEta(values.status), size: "large" };
-    const index = machines.findIndex(item => item.id === editingMachineId);
-    if (index === -1) machines.push(machine);
-    else machines[index] = { ...machines[index], ...machine };
-    dialog.close();
-    refreshDashboardMachines();
+    const row = { id, label: values.label.trim(), type: values.type, size: values.size, load: values.load.trim(), price: Math.round(Number(values.price) || 0), status: values.status, eta: statusEta(values.status) };
+    const button = event.submitter;
+    if (button) button.disabled = true;
+    const table = window.WashWizDB.client.from("machines");
+    const request = editingMachineId
+      ? table.update(row).eq("shop_id", facility.shop.id).eq("id", editingMachineId)
+      : table.insert({ ...row, shop_id: facility.shop.id, sort_order: machines.length + 1 });
+    request.then(({ error }) => {
+      if (button) button.disabled = false;
+      if (error) { alert(window.WashWizDB.errorText(error)); return; }
+      dialog.close();
+    });
   });
 
   dialog.addEventListener("click", event => {

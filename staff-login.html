@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="logo-transparent.png">
+    <title>WashWiz Staff Sign in</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+  </head>
+  <body>
+    <!-- WashWiz admin sign-in. Not linked from the public site; open it directly at /staff-login. -->
+    <main class="staff-login">
+      <header class="staff-top">
+        <a class="staff-brand" href="index.html"><img src="logo-transparent.png" alt=""><b>Wash<span>Wiz</span></b></a>
+        <a class="staff-back" href="index.html">&larr;&nbsp; Back to public website</a>
+      </header>
+
+      <div class="staff-login-grid">
+        <section class="staff-welcome">
+          <h1><span>Welcome back,</span><br><span>Wash<em>Wiz</em> staff</span></h1>
+          <p>Sign in to manage laundry shops, facility accounts, bookings, and customer chats across WashWiz.</p>
+          <div class="staff-note">
+            <span class="staff-note-mark" aria-hidden="true">&#10003;</span>
+            <div>
+              <strong>Admin accounts only</strong>
+              <small>Sign-in is verified by WashWiz's secure account service. Only active staff accounts with the Admin role can open the admin dashboard. Laundry shops use the Facility login.</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="staff-card" aria-labelledby="staffSignInTitle">
+          <p class="staff-eyebrow">Staff access</p>
+          <h2 id="staffSignInTitle">Sign in</h2>
+          <p class="staff-eyebrow small">Use the email and password for your WashWiz admin account.</p>
+          <form id="staffLoginForm" novalidate>
+            <label class="staff-field">Staff email
+              <span class="staff-input"><input id="staffEmail" type="email" placeholder="name@wsh.org" autocomplete="username" required><span class="staff-adorn" aria-hidden="true">@</span></span>
+            </label>
+            <label class="staff-field">Password
+              <span class="staff-input"><input id="staffPassword" type="password" placeholder="Enter your password" autocomplete="current-password" required><button class="staff-adorn" id="staffShowPassword" type="button" aria-label="Show password">Show</button></span>
+            </label>
+            <a class="staff-help" href="mailto:ops@washwiz.io?subject=WashWiz%20admin%20access">Need access help?</a>
+            <button class="staff-submit" id="staffSubmit" type="submit">Sign in</button>
+            <p class="staff-message" id="staffMessage" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/washwiz-db.js"></script>
+    <script>
+      "use strict";
+      const db = window.WashWizDB;
+      const message = (text, error = false) => {
+        const node = document.getElementById("staffMessage");
+        node.textContent = text;
+        node.classList.toggle("error", error);
+      };
+
+      // Only active admins get through; anyone else is signed straight back out.
+      async function openIfAdmin() {
+        const { data: { session } } = await db.client.auth.getSession();
+        if (!session) return false;
+        const { data: staff } = await db.client.from("staff").select("role,status").eq("user_id", session.user.id).maybeSingle();
+        if (staff && staff.role === "admin" && staff.status === "active") {
+          location.replace("staff.html");
+          return true;
+        }
+        await db.client.auth.signOut();
+        message("This account is not a WashWiz admin. Laundry shops sign in on the Facility login.", true);
+        return false;
+      }
+
+      document.getElementById("staffShowPassword").addEventListener("click", event => {
+        const input = document.getElementById("staffPassword");
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        event.currentTarget.textContent = show ? "Hide" : "Show";
+        event.currentTarget.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      });
+
+      document.getElementById("staffLoginForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const email = document.getElementById("staffEmail").value.trim();
+        const password = document.getElementById("staffPassword").value;
+        if (!email || !password) { message("Enter your staff email and password.", true); return; }
+        const button = document.getElementById("staffSubmit");
+        button.disabled = true;
+        message("Signing in...");
+        const { error } = await db.client.auth.signInWithPassword({ email, password });
+        button.disabled = false;
+        if (error) { message(error.message === "Invalid login credentials" ? "Email or password is incorrect." : db.errorText(error), true); return; }
+        message("");
+        openIfAdmin();
+      });
+
+      openIfAdmin();
+    </script>
+  </body>
+</html>

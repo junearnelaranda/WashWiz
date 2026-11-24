@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="logo-transparent.png">
+    <title>WashWiz Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+  </head>
+  <body>
+    <!-- WashWiz admin site. Only active admins can read its data (enforced by the database). -->
+    <div class="admin-shell hidden" id="adminApp">
+      <aside class="admin-side">
+        <a class="staff-brand" href="staff.html"><img src="logo-transparent.png" alt=""><b>Wash<span>Wiz</span></b></a>
+        <button class="admin-nav active" type="button" data-admin-view="overview">Overview</button>
+        <button class="admin-nav" type="button" data-admin-view="shops">Shops &amp; machines</button>
+        <button class="admin-nav" type="button" data-admin-view="bookings">All bookings</button>
+        <button class="admin-nav" type="button" data-admin-view="facilities">Facility accounts</button>
+        <button class="admin-nav" type="button" data-admin-view="chats">Chats <b id="adminChatBadge" class="hidden">0</b></button>
+        <div class="admin-side-foot">
+          <div>Signed in as<br><strong id="adminEmail"></strong></div>
+          <button class="btn sm" type="button" id="adminSignOut">Sign out</button>
+        </div>
+      </aside>
+      <main class="admin-main">
+        <header class="admin-head">
+          <div><h1 id="adminTitle">Overview</h1><p id="adminSubtitle">Every laundry shop on WashWiz</p></div>
+          <span class="live-dot">Live</span>
+        </header>
+        <section id="adminView"></section>
+      </main>
+    </div>
+    <div class="admin-toast" id="adminToast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/washwiz-db.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>

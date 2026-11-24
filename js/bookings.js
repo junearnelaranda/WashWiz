@@ -18,7 +18,7 @@
   }
 
   function statusBadge(status) {
-    const classes = { Requested: "requested", "In Cycle": "in-cycle", Drying: "drying", Completed: "completed", Paid: "paid" };
+    const classes = { Requested: "requested", Confirmed: "requested", Processing: "in-cycle", "In Cycle": "in-cycle", Drying: "drying", "Ready for Pickup": "completed", Completed: "completed", Paid: "paid", Cancelled: "drying" };
     return `<span class="booking-status ${classes[status] || ""}">${text(status)}</span>`;
   }
 
@@ -83,7 +83,7 @@
     openDialog(receipt ? "Booking receipt" : "Booking details", `
       <div class="booking-dialog-summary">${customerCell(booking)}${statusBadge(booking.status)}</div>
       <dl class="booking-record">
-        <div><dt>Facility</dt><dd>${text(booking.facility || "Bluewater Laundry")}</dd></div>
+        <div><dt>Facility</dt><dd>${text(booking.facility || facility.shop?.name || "")}</dd></div>
         <div><dt>Machine</dt><dd>${text(booking.machine)} / ${text(machine?.label || booking.type)}</dd></div>
         ${machine ? `<div><dt>Capacity</dt><dd>${text(machine.load)}</dd></div>` : ""}
         <div><dt>Booking time</dt><dd>${text(booking.time)}</dd></div>
@@ -91,13 +91,20 @@
         ${booking.notes ? `<div><dt>Customer notes</dt><dd>${text(booking.notes)}</dd></div>` : ""}
         <div class="receipt-total"><dt>Total</dt><dd>${text(money(booking.total))}</dd></div>
       </dl>
+      ${receipt ? "" : `<form class="booking-update-form" data-booking-update>
+        <label>Status<select name="status">${(window.WashWizDB.STATUSES.includes(booking.status) ? window.WashWizDB.STATUSES : [booking.status, ...window.WashWizDB.STATUSES]).map(status => `<option ${status === booking.status ? "selected" : ""}>${text(status)}</option>`).join("")}</select></label>
+        <label>Machine<select name="machine"><option value="Unassigned">Unassigned</option>${machines.map(item => `<option value="${text(item.id)}" ${item.id === booking.machine ? "selected" : ""}>${text(item.id)} / ${text(item.label)}${item.status !== "available" && item.id !== booking.machine ? ` (${text(item.status)})` : ""}</option>`).join("")}</select></label>
+        <label>Total (PHP)<input name="total" type="number" min="0" step="1" value="${text(booking.total)}"></label>
+        <button class="primary-btn compact" type="submit">Save changes</button>
+        <small class="booking-update-note">The customer sees status changes on their order page right away.</small>
+      </form>`}
       <div class="booking-dialog-actions">${receipt ? `<button class="booking-action" type="button" data-download-booking>${dashboardIcon("download")}Download</button><button class="booking-action" type="button" data-print-booking>${dashboardIcon("printer")}Print</button>` : `<button class="booking-action" type="button" data-booking-receipt="${index}">${dashboardIcon("receipt-text")}Receipt</button>`}</div>`, receipt);
   }
 
   function downloadReceipt() {
     if (!selectedBooking) return;
     const booking = selectedBooking;
-    const receipt = ["WashWiz - Booking Receipt", booking.facility || "Bluewater Laundry", "", `Customer: ${booking.customer}`, `Contact: ${booking.contact}`, `Machine: ${booking.machine} (${booking.type})`, `Status: ${booking.status}`, `Time: ${booking.time}`, "", `Total: ${money(booking.total)}`].join("\r\n");
+    const receipt = ["WashWiz - Booking Receipt", booking.facility || facility.shop?.name || "", "", `Customer: ${booking.customer}`, `Contact: ${booking.contact}`, `Machine: ${booking.machine} (${booking.type})`, `Status: ${booking.status}`, `Time: ${booking.time}`, "", `Total: ${money(booking.total)}`].join("\r\n");
     const url = URL.createObjectURL(new Blob([receipt], { type: "text/plain;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -146,6 +153,16 @@
     if (event.target.closest("#menuToggle, [data-route], [data-page-link], [data-dashboard-dialog]")) {
       byId("menuToggle").setAttribute("aria-expanded", String(document.querySelector(".sidebar").classList.contains("open")));
     }
+  });
+  dialog.addEventListener("submit", async event => {
+    if (!event.target.matches("[data-booking-update]") || !selectedBooking) return;
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.target));
+    const button = event.target.querySelector("button[type=submit]");
+    button.disabled = true;
+    const ok = await updateBooking(selectedBooking, { status: values.status, machine: values.machine, total: Math.max(0, Math.round(Number(values.total) || 0)) });
+    button.disabled = false;
+    if (ok) dialog.close();
   });
   dialog.addEventListener("close", () => document.body.classList.remove("booking-receipt-print"));
   dialog.addEventListener("click", event => {
